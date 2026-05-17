@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useState, useRef } from "react";
 
 const PRIMARY = "#0EA5E9";
@@ -10,20 +11,20 @@ const TEXT_DARK = "#111827";
 const TEXT_MID = "#4B5563";
 
 const tedavilerItems = [
-  { label: "Genel Diş Hekimliği", href: "/tedaviler/genel" },
-  { label: "Kanal Tedavisi", href: "/tedaviler/kanal" },
-  { label: "Estetik Diş Hekimliği", href: "/tedaviler/estetik" },
-  { label: "Diş Eti Tedavisi (Periodontoloji)", href: "/tedaviler/periodonti" },
-  { label: "İmplant & Cerrahi", href: "/tedaviler/implant" },
-  { label: "Ortodonti", href: "/tedaviler/ortodonti" },
-  { label: "Çocuk Diş Hekimliği", href: "/tedaviler/cocuk" },
-  { label: "Diş Protezi", href: "/tedaviler/protez" },
+  { label: "Dişeti Hastalıkları Tedavileri", href: "/tedaviler/genel" },
+  { label: "İmplant & Çene Cerrahisi", href: "/tedaviler/kanal" },
+  { label: "Mikrocerrahi ve Plastik cerrahi", href: "/tedaviler/estetik" },
+  { label: "Kemik Grefti & Rejeneratif Uygulamalar", href: "/tedaviler/periodonti" },
+  { label: "Estetik Protetik & Restoratif Uygulamalar", href: "/tedaviler/implant" },
+  { label: "Gülüş Tasarımı", href: "/tedaviler/ortodonti" },
+  { label: "Kanal Tedavisi", href: "/tedaviler/cocuk" },
+  { label: "Bruksizm Tedavisi & Masseter Botoksu", href: "/tedaviler/protez" },
   { label: "Dijital Diş Hekimliği", href: "/tedaviler/dijital" },
 ];
 
 const regularNavLinks = [
   { label: "Ana Sayfa", href: "/" },
-  { label: "Hakkımızda", href: "/hakkimizda" },
+  { label: "Hakkımda", href: "/hakkimda" },
   { label: "Doktorlar", href: "/doktorlar" },
   { label: "Blog", href: "/blog" },
   { label: "İletişim", href: "/iletisim" },
@@ -128,10 +129,16 @@ function ChevronDownIcon({ open }: { open: boolean }) {
 }
 
 export default function Header() {
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [mobileTedavilerOpen, setMobileTedavilerOpen] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const isActive = (href: string) =>
+    href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(href + "/");
+
+  const isTedavilerActive = pathname.startsWith("/tedaviler");
 
   const openDropdown = () => {
     if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
@@ -247,15 +254,17 @@ export default function Header() {
                 <Link
                   href="/"
                   className="relative px-4 py-4 text-sm font-medium transition-colors block"
-                  style={{ color: PRIMARY }}
+                  style={{ color: isActive("/") ? PRIMARY : TEXT_MID }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-                  onMouseLeave={(e) => (e.currentTarget.style.color = PRIMARY)}
+                  onMouseLeave={(e) => { if (!isActive("/")) e.currentTarget.style.color = TEXT_MID; }}
                 >
                   Ana Sayfa
-                  <span
-                    className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
-                    style={{ backgroundColor: PRIMARY }}
-                  />
+                  {isActive("/") && (
+                    <span
+                      className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
+                      style={{ backgroundColor: PRIMARY }}
+                    />
+                  )}
                 </Link>
               </li>
 
@@ -266,15 +275,21 @@ export default function Header() {
                 onMouseLeave={scheduleClose}
               >
                 <button
-                  className="flex items-center gap-1.5 px-4 py-4 text-sm font-medium transition-colors"
-                  style={{ color: dropdownOpen ? PRIMARY : TEXT_MID }}
+                  className="relative flex items-center gap-1.5 px-4 py-4 text-sm font-medium transition-colors"
+                  style={{ color: (dropdownOpen || isTedavilerActive) ? PRIMARY : TEXT_MID }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-                  onMouseLeave={(e) => { if (!dropdownOpen) e.currentTarget.style.color = TEXT_MID; }}
+                  onMouseLeave={(e) => { if (!dropdownOpen && !isTedavilerActive) e.currentTarget.style.color = TEXT_MID; }}
                   aria-expanded={dropdownOpen}
                   aria-haspopup="true"
                 >
                   Tedavilerimiz
                   <ChevronDownIcon open={dropdownOpen} />
+                  {isTedavilerActive && (
+                    <span
+                      className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
+                      style={{ backgroundColor: PRIMARY }}
+                    />
+                  )}
                 </button>
 
                 {/* Dropdown Panel */}
@@ -310,19 +325,28 @@ export default function Header() {
               </li>
 
               {/* Remaining links */}
-              {regularNavLinks.slice(1).map(({ label, href }) => (
-                <li key={label}>
-                  <Link
-                    href={href}
-                    className="relative px-4 py-4 text-sm font-medium transition-colors block"
-                    style={{ color: TEXT_MID }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_MID)}
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              {regularNavLinks.slice(1).map(({ label, href }) => {
+                const active = isActive(href);
+                return (
+                  <li key={label}>
+                    <Link
+                      href={href}
+                      className="relative px-4 py-4 text-sm font-medium transition-colors block"
+                      style={{ color: active ? PRIMARY : TEXT_MID }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
+                      onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = TEXT_MID; }}
+                    >
+                      {label}
+                      {active && (
+                        <span
+                          className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
+                          style={{ backgroundColor: PRIMARY }}
+                        />
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
 
             <Link
@@ -358,7 +382,10 @@ export default function Header() {
                   href="/"
                   onClick={() => setMobileOpen(false)}
                   className="block px-3 py-2.5 rounded-lg text-sm font-medium"
-                  style={{ color: PRIMARY, backgroundColor: PRIMARY_LIGHT }}
+                  style={{
+                    color: isActive("/") ? PRIMARY : TEXT_MID,
+                    backgroundColor: isActive("/") ? PRIMARY_LIGHT : "transparent",
+                  }}
                 >
                   Ana Sayfa
                 </Link>
@@ -369,7 +396,10 @@ export default function Header() {
                 <button
                   onClick={() => setMobileTedavilerOpen((prev) => !prev)}
                   className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                  style={{ color: mobileTedavilerOpen ? PRIMARY : TEXT_MID }}
+                  style={{
+                    color: (mobileTedavilerOpen || isTedavilerActive) ? PRIMARY : TEXT_MID,
+                    backgroundColor: isTedavilerActive ? PRIMARY_LIGHT : "transparent",
+                  }}
                 >
                   Tedavilerimiz
                   <ChevronDownIcon open={mobileTedavilerOpen} />
@@ -395,18 +425,24 @@ export default function Header() {
               </li>
 
               {/* Remaining links */}
-              {regularNavLinks.slice(1).map(({ label, href }) => (
-                <li key={label}>
-                  <Link
-                    href={href}
-                    onClick={() => setMobileOpen(false)}
-                    className="block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
-                    style={{ color: TEXT_MID, backgroundColor: "transparent" }}
-                  >
-                    {label}
-                  </Link>
-                </li>
-              ))}
+              {regularNavLinks.slice(1).map(({ label, href }) => {
+                const active = isActive(href);
+                return (
+                  <li key={label}>
+                    <Link
+                      href={href}
+                      onClick={() => setMobileOpen(false)}
+                      className="block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                      style={{
+                        color: active ? PRIMARY : TEXT_MID,
+                        backgroundColor: active ? PRIMARY_LIGHT : "transparent",
+                      }}
+                    >
+                      {label}
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
 
             <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
