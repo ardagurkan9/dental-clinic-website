@@ -11,21 +11,20 @@ const TEXT_DARK = "#111827";
 const TEXT_MID = "#4B5563";
 
 const tedavilerItems = [
-  { label: "Dişeti Hastalıkları Tedavileri", href: "/tedaviler/genel" },
-  { label: "İmplant & Çene Cerrahisi", href: "/tedaviler/kanal" },
-  { label: "Mikrocerrahi ve Plastik cerrahi", href: "/tedaviler/estetik" },
-  { label: "Kemik Grefti & Rejeneratif Uygulamalar", href: "/tedaviler/periodonti" },
-  { label: "Estetik Protetik & Restoratif Uygulamalar", href: "/tedaviler/implant" },
-  { label: "Gülüş Tasarımı", href: "/tedaviler/ortodonti" },
-  { label: "Kanal Tedavisi", href: "/tedaviler/cocuk" },
-  { label: "Bruksizm Tedavisi & Masseter Botoksu", href: "/tedaviler/protez" },
+  { label: "Dişeti Hastalıkları Tedavileri", href: "/tedaviler/diseti-hastaliklari" },
+  { label: "İmplant & Çene Cerrahisi", href: "/tedaviler/implant" },
+  { label: "Mikrocerrahi ve Plastik Cerrahi", href: "/tedaviler/mikrocerrahi" },
+  { label: "Kemik Grefti & Rejeneratif Uygulamalar", href: "/tedaviler/kemik-grefti" },
+  { label: "Estetik Protetik & Restoratif Uygulamalar", href: "/tedaviler/protetik" },
+  { label: "Gülüş Tasarımı", href: "/tedaviler/gulus-tasarimi" },
+  { label: "Kanal Tedavisi", href: "/tedaviler/kanal" },
+  { label: "Bruksizm Tedavisi & Masseter Botoksu", href: "/tedaviler/bruksizm" },
   { label: "Dijital Diş Hekimliği", href: "/tedaviler/dijital" },
 ];
 
 const regularNavLinks = [
   { label: "Ana Sayfa", href: "/" },
   { label: "Hakkımda", href: "/hakkimda" },
-  { label: "Doktorlar", href: "/doktorlar" },
   { label: "Blog", href: "/blog" },
   { label: "İletişim", href: "/iletisim" },
 ];
