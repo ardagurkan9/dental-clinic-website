@@ -4,11 +4,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useRef } from "react";
 
-const PRIMARY = "#0EA5E9";
-const PRIMARY_HOVER = "#0369A1";
-const PRIMARY_LIGHT = "#E0F2FE";
-const TEXT_DARK = "#111827";
-const TEXT_MID = "#4B5563";
+const INK = "#1C1A15";
+const INK_MID = "#3D3830";
+const GOLD = "#8B7355";
+const GOLD_BRIGHT = "#B8966A";
+const CREAM = "#FAF7F2";
+const BORDER = "#DDD0B8";
 
 const tedavilerItems = [
   { label: "Dişeti Hastalıkları Tedavileri", href: "/tedaviler/diseti-hastaliklari" },
@@ -24,7 +25,7 @@ const tedavilerItems = [
 
 function MenuIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" viewBox="0 0 24 24">
       <line x1="3" y1="6" x2="21" y2="6" />
       <line x1="3" y1="12" x2="21" y2="12" />
       <line x1="3" y1="18" x2="21" y2="18" />
@@ -34,7 +35,7 @@ function MenuIcon() {
 
 function CloseIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" viewBox="0 0 24 24">
+    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" viewBox="0 0 24 24">
       <line x1="18" y1="6" x2="6" y2="18" />
       <line x1="6" y1="6" x2="18" y2="18" />
     </svg>
@@ -44,11 +45,11 @@ function CloseIcon() {
 function ChevronDownIcon({ open }: { open: boolean }) {
   return (
     <svg
-      width="14"
-      height="14"
+      width="13"
+      height="13"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2.5"
+      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       viewBox="0 0 24 24"
@@ -87,46 +88,47 @@ export default function Header() {
   ];
 
   return (
-    <header className="w-full fixed top-0 left-0 z-50 bg-white shadow-sm">
+    <header
+      className="w-full fixed top-0 left-0 z-50 bg-[#FAF7F2] font-outfit"
+      style={{ borderBottom: `1px solid ${BORDER}` }}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16">
 
-          {/* Logo — left */}
+          {/* Logo */}
           <Link href="/" className="flex items-center gap-3 shrink-0">
             <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold select-none"
-              style={{ backgroundColor: PRIMARY }}
+              className="w-9 h-9 flex items-center justify-center border shrink-0"
+              style={{ borderColor: `${GOLD}60` }}
             >
-              DK
+              <span className="font-cormorant text-sm font-bold" style={{ color: GOLD_BRIGHT }}>DK</span>
             </div>
             <div>
-              <p className="text-base font-bold leading-tight" style={{ color: TEXT_DARK }}>
+              <p className="font-cormorant text-[15px] font-medium leading-tight" style={{ color: INK }}>
                 Diş Kliniği
               </p>
-              <p className="text-xs font-medium tracking-wide uppercase" style={{ color: PRIMARY }}>
+              <p className="text-[10px] font-medium tracking-[0.18em] uppercase" style={{ color: GOLD }}>
                 Sağlıklı Gülüşler
               </p>
             </div>
           </Link>
 
-          {/* Desktop nav — center */}
+          {/* Desktop nav */}
           <nav className="hidden md:flex flex-1 items-center justify-center">
-            <ul className="flex items-center gap-1">
+            <ul className="flex items-center gap-0.5">
+
               {/* Ana Sayfa */}
               <li>
                 <Link
                   href="/"
                   className="relative px-4 py-2 text-sm font-medium transition-colors block"
-                  style={{ color: isActive("/") ? PRIMARY : TEXT_MID }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-                  onMouseLeave={(e) => { if (!isActive("/")) e.currentTarget.style.color = TEXT_MID; }}
+                  style={{ color: isActive("/") ? GOLD : INK_MID }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = GOLD)}
+                  onMouseLeave={(e) => { if (!isActive("/")) e.currentTarget.style.color = INK_MID; }}
                 >
                   Ana Sayfa
                   {isActive("/") && (
-                    <span
-                      className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
-                      style={{ backgroundColor: PRIMARY }}
-                    />
+                    <span className="absolute bottom-0 left-4 right-4 h-px" style={{ backgroundColor: GOLD }} />
                   )}
                 </Link>
               </li>
@@ -139,19 +141,16 @@ export default function Header() {
               >
                 <button
                   className="relative flex items-center gap-1.5 px-4 py-2 text-sm font-medium transition-colors"
-                  style={{ color: (dropdownOpen || isTedavilerActive) ? PRIMARY : TEXT_MID }}
-                  onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-                  onMouseLeave={(e) => { if (!dropdownOpen && !isTedavilerActive) e.currentTarget.style.color = TEXT_MID; }}
+                  style={{ color: (dropdownOpen || isTedavilerActive) ? GOLD : INK_MID }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = GOLD)}
+                  onMouseLeave={(e) => { if (!dropdownOpen && !isTedavilerActive) e.currentTarget.style.color = INK_MID; }}
                   aria-expanded={dropdownOpen}
                   aria-haspopup="true"
                 >
                   Tedavilerimiz
                   <ChevronDownIcon open={dropdownOpen} />
                   {isTedavilerActive && (
-                    <span
-                      className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
-                      style={{ backgroundColor: PRIMARY }}
-                    />
+                    <span className="absolute bottom-0 left-4 right-4 h-px" style={{ backgroundColor: GOLD }} />
                   )}
                 </button>
 
@@ -160,22 +159,29 @@ export default function Header() {
                   onMouseLeave={scheduleClose}
                   style={{
                     opacity: dropdownOpen ? 1 : 0,
-                    transform: dropdownOpen ? "translateY(0)" : "translateY(-8px)",
+                    transform: dropdownOpen ? "translateY(0)" : "translateY(-6px)",
                     pointerEvents: dropdownOpen ? "auto" : "none",
                     transition: "opacity 0.18s ease, transform 0.18s ease",
+                    borderColor: BORDER,
                   }}
-                  className="absolute top-full left-0 z-50 mt-1 w-64 bg-white rounded-xl shadow-xl border border-gray-100 overflow-hidden"
+                  className="absolute top-full left-0 z-50 mt-1 w-72 bg-[#FAF7F2] border shadow-xl overflow-hidden"
                 >
-                  <ul className="py-2">
+                  <ul className="py-1.5">
                     {tedavilerItems.map((item) => (
                       <li key={item.label}>
                         <Link
                           href={item.href}
                           onClick={() => setDropdownOpen(false)}
-                          className="block px-5 py-2 text-sm transition-colors"
-                          style={{ color: TEXT_MID }}
-                          onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_MID)}
+                          className="block px-5 py-2.5 text-sm transition-colors"
+                          style={{ color: INK_MID }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.color = GOLD;
+                            e.currentTarget.style.backgroundColor = "#F2ECE0";
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.color = INK_MID;
+                            e.currentTarget.style.backgroundColor = "transparent";
+                          }}
                         >
                           {item.label}
                         </Link>
@@ -193,16 +199,13 @@ export default function Header() {
                     <Link
                       href={href}
                       className="relative px-4 py-2 text-sm font-medium transition-colors block"
-                      style={{ color: active ? PRIMARY : TEXT_MID }}
-                      onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-                      onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = TEXT_MID; }}
+                      style={{ color: active ? GOLD : INK_MID }}
+                      onMouseEnter={(e) => (e.currentTarget.style.color = GOLD)}
+                      onMouseLeave={(e) => { if (!active) e.currentTarget.style.color = INK_MID; }}
                     >
                       {label}
                       {active && (
-                        <span
-                          className="absolute bottom-0 left-4 right-4 h-0.5 rounded-full"
-                          style={{ backgroundColor: PRIMARY }}
-                        />
+                        <span className="absolute bottom-0 left-4 right-4 h-px" style={{ backgroundColor: GOLD }} />
                       )}
                     </Link>
                   </li>
@@ -211,14 +214,14 @@ export default function Header() {
             </ul>
           </nav>
 
-          {/* CTA button — right */}
+          {/* CTA — desktop */}
           <div className="hidden md:flex shrink-0 ml-auto">
             <Link
               href="/randevu"
-              className="inline-flex items-center text-white text-sm font-semibold px-5 py-2.5 rounded-lg transition-colors"
-              style={{ backgroundColor: PRIMARY }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = PRIMARY_HOVER)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = PRIMARY)}
+              className="inline-flex items-center text-[#FAF7F2] text-sm font-medium px-5 py-2.5 tracking-wide transition-colors"
+              style={{ backgroundColor: INK }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2A261E")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = INK)}
             >
               Randevu Al
             </Link>
@@ -227,11 +230,11 @@ export default function Header() {
           {/* Hamburger — mobile */}
           <button
             className="md:hidden ml-auto transition-colors"
-            style={{ color: TEXT_MID }}
+            style={{ color: INK_MID }}
             onClick={() => setMobileOpen((prev) => !prev)}
             aria-label="Menüyü aç/kapat"
-            onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-            onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_MID)}
+            onMouseEnter={(e) => (e.currentTarget.style.color = GOLD)}
+            onMouseLeave={(e) => (e.currentTarget.style.color = INK_MID)}
           >
             {mobileOpen ? <CloseIcon /> : <MenuIcon />}
           </button>
@@ -240,16 +243,16 @@ export default function Header() {
 
       {/* Mobile menu */}
       {mobileOpen && (
-        <div className="md:hidden border-t border-gray-100 bg-white px-4 pb-4">
-          <ul className="flex flex-col gap-1 pt-3">
+        <div className="md:hidden bg-[#FAF7F2] px-4 pb-4" style={{ borderTop: `1px solid ${BORDER}` }}>
+          <ul className="flex flex-col gap-0.5 pt-2">
             <li>
               <Link
                 href="/"
                 onClick={() => setMobileOpen(false)}
-                className="block px-3 py-2.5 rounded-lg text-sm font-medium"
+                className="block px-3 py-2.5 text-sm font-medium transition-colors"
                 style={{
-                  color: isActive("/") ? PRIMARY : TEXT_MID,
-                  backgroundColor: isActive("/") ? PRIMARY_LIGHT : "transparent",
+                  color: isActive("/") ? GOLD : INK_MID,
+                  backgroundColor: isActive("/") ? "#F2ECE0" : "transparent",
                 }}
               >
                 Ana Sayfa
@@ -260,26 +263,26 @@ export default function Header() {
             <li>
               <button
                 onClick={() => setMobileTedavilerOpen((prev) => !prev)}
-                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2.5 text-sm font-medium transition-colors"
                 style={{
-                  color: (mobileTedavilerOpen || isTedavilerActive) ? PRIMARY : TEXT_MID,
-                  backgroundColor: isTedavilerActive ? PRIMARY_LIGHT : "transparent",
+                  color: (mobileTedavilerOpen || isTedavilerActive) ? GOLD : INK_MID,
+                  backgroundColor: isTedavilerActive ? "#F2ECE0" : "transparent",
                 }}
               >
                 Tedavilerimiz
                 <ChevronDownIcon open={mobileTedavilerOpen} />
               </button>
               {mobileTedavilerOpen && (
-                <ul className="mt-1 ml-3 flex flex-col gap-0.5 border-l-2 pl-3" style={{ borderColor: PRIMARY_LIGHT }}>
+                <ul className="mt-1 ml-3 flex flex-col gap-0 border-l pl-3" style={{ borderColor: BORDER }}>
                   {tedavilerItems.map((item) => (
                     <li key={item.label}>
                       <Link
                         href={item.href}
                         onClick={() => { setMobileOpen(false); setMobileTedavilerOpen(false); }}
                         className="block px-2 py-2 text-sm transition-colors"
-                        style={{ color: TEXT_MID }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = PRIMARY)}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = TEXT_MID)}
+                        style={{ color: INK_MID }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = GOLD)}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = INK_MID)}
                       >
                         {item.label}
                       </Link>
@@ -296,10 +299,10 @@ export default function Header() {
                   <Link
                     href={href}
                     onClick={() => setMobileOpen(false)}
-                    className="block px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                    className="block px-3 py-2.5 text-sm font-medium transition-colors"
                     style={{
-                      color: active ? PRIMARY : TEXT_MID,
-                      backgroundColor: active ? PRIMARY_LIGHT : "transparent",
+                      color: active ? GOLD : INK_MID,
+                      backgroundColor: active ? "#F2ECE0" : "transparent",
                     }}
                   >
                     {label}
@@ -309,14 +312,14 @@ export default function Header() {
             })}
           </ul>
 
-          <div className="mt-4 pt-4 border-t border-gray-100">
+          <div className="mt-4 pt-4" style={{ borderTop: `1px solid ${BORDER}` }}>
             <Link
               href="/randevu"
               onClick={() => setMobileOpen(false)}
-              className="flex justify-center text-white text-sm font-semibold px-5 py-3 rounded-lg transition-colors"
-              style={{ backgroundColor: PRIMARY }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = PRIMARY_HOVER)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = PRIMARY)}
+              className="flex justify-center text-[#FAF7F2] text-sm font-medium px-5 py-3 tracking-wide transition-colors"
+              style={{ backgroundColor: INK }}
+              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = "#2A261E")}
+              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = INK)}
             >
               Randevu Al
             </Link>
