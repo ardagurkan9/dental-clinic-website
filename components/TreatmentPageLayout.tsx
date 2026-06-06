@@ -1,6 +1,7 @@
 import Link from "next/link";
 import PageHero from "@/components/PageHero";
 import SiteFooter from "@/components/SiteFooter";
+import { TreatmentFaqSection, type FaqItem } from "@/components/TreatmentFaqSection";
 
 const WA_LINK = "https://wa.me/902121234567?text=Merhaba%2C%20randevu%20almak%20istiyorum.";
 
@@ -12,6 +13,7 @@ interface TreatmentPageProps {
   heading: string;
   paragraphs: string[];
   benefits: string[];
+  faqs: FaqItem[];
 }
 
 export default function TreatmentPageLayout({
@@ -22,6 +24,7 @@ export default function TreatmentPageLayout({
   heading,
   paragraphs,
   benefits,
+  faqs,
 }: TreatmentPageProps) {
   return (
     <div className="min-h-screen font-outfit" style={{ background: "#FAF8F5" }}>
@@ -121,6 +124,8 @@ export default function TreatmentPageLayout({
           </div>
         </div>
       </section>
+
+      <TreatmentFaqSection faqs={faqs} />
 
       <SiteFooter />
     </div>

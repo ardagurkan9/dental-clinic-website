@@ -6,6 +6,34 @@ export const metadata: Metadata = {
   description: "Minimal invaziv mikrocerrahi teknikleriyle hassas ve estetik sonuçlar.",
 };
 
+const faqs = [
+  {
+    id: "item-1",
+    title: "Mikrocerrahi hangi durumlarda uygulanır?",
+    content: "Dişeti çekilmesi (resession) tedavisinde, dişeti hattının estetik düzenlenmesinde, frenulum (dudak/dil bağı) plastisinde ve kök yüzeyi düzeltme işlemlerinde uygulanır. Büyütme gerektiren hassas cerrahi alanlarda tercih edilir.",
+  },
+  {
+    id: "item-2",
+    title: "İyileşme süreci nasıldır?",
+    content: "Minimal invaziv yaklaşım sayesinde geleneksel cerrahiye kıyasla daha hızlı iyileşme sağlanır. İlk 48 saat şişlik ve hafif ağrı olabilir. Dikişler genellikle 1 hafta sonra alınır; tam iyileşme 2–4 haftada tamamlanır.",
+  },
+  {
+    id: "item-3",
+    title: "Dişeti çekilmesi tedavisi kalıcı mıdır?",
+    content: "Evet. Bağ dokusu veya serbest dişeti grefti ile yapılan plastik cerrahi uzun vadeli sonuçlar verir. Tedavi sonrası uygun fırçalama tekniği ve düzenli kontrollerle çekilmenin tekrar oluşması önlenebilir.",
+  },
+  {
+    id: "item-4",
+    title: "İşlem lokal anestezi ile mi yapılır?",
+    content: "Evet. Tüm mikrocerrahi işlemler lokal anestezi altında gerçekleştirilir; bu nedenle işlem sırasında ağrı hissedilmez. İşlem öncesi sakinleştirici kullanım isteğinizi hekimimizle paylaşabilirsiniz.",
+  },
+  {
+    id: "item-5",
+    title: "Frenulum plastisi çocuklara da uygulanır mı?",
+    content: "Evet. Dudak veya dil bağının emme, konuşma ya da dişlerin arasında boşluk oluşturma gibi işlevsel sorunlara yol açtığı durumlarda her yaşa uygulanabilir. Pediatrik vakalarda ek konfor için sedasyon seçeneği de değerlendirilebilir.",
+  },
+];
+
 const benefits = [
   "Minimal invaziv cerrahi yaklaşım",
   "Büyütme altında hassas doku işlemi",
@@ -28,6 +56,7 @@ export default function MikrocerrahiPage() {
         "Plastik periodontal cerrahi uygulamalarımız; dişeti çekilmesi, dişeti hatlarının düzenlenmesi ve estetik gülüş oluşturma amacıyla uygulanmaktadır.",
       ]}
       benefits={benefits}
+      faqs={faqs}
     />
   );
 }

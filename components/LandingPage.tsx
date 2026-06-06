@@ -583,7 +583,62 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════
-          8. 3-STEP PROCESS
+          8. CLINIC VIDEO
+      ══════════════════════════════════════ */}
+      <section className="relative h-[70vh] min-h-[480px] flex items-center justify-center overflow-hidden">
+        {/* Background video */}
+        <video
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          src="/videos/clinic-hero.mp4"
+        />
+
+        {/* Navy overlay with warm gold gradient */}
+        <div className="absolute inset-0"
+          style={{ background: "linear-gradient(135deg, rgba(15,30,53,0.82) 0%, rgba(15,30,53,0.65) 50%, rgba(15,30,53,0.82) 100%)" }} />
+
+        {/* Thin gold lines — top and bottom */}
+        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(184,146,42,0.5), transparent)` }} />
+        <div className="absolute bottom-0 left-0 right-0 h-px" style={{ background: `linear-gradient(to right, transparent, rgba(184,146,42,0.5), transparent)` }} />
+
+        {/* Content */}
+        <FadeIn className="relative z-10 text-center px-6 max-w-3xl mx-auto">
+          <div className="flex items-center justify-center gap-5 mb-8">
+            <div className="h-px flex-1 max-w-16" style={{ background: "rgba(184,146,42,0.45)" }} />
+            <span className="text-[10px] tracking-[0.32em] uppercase font-medium" style={{ color: "#C9A84C" }}>Kliniğimiz</span>
+            <div className="h-px flex-1 max-w-16" style={{ background: "rgba(184,146,42,0.45)" }} />
+          </div>
+
+          <h2 className="font-cormorant font-light leading-tight mb-6" style={{ fontSize: "clamp(38px,5.5vw,68px)", color: "#F0EBE0" }}>
+            Modern teknoloji,{" "}
+            <span className="italic font-medium" style={{ color: "#C9A84C" }}>uzman eller.</span>
+          </h2>
+
+          <p className="text-[15px] leading-relaxed max-w-lg mx-auto mb-10" style={{ color: "rgba(240,235,224,0.65)" }}>
+            Son teknoloji ekipmanlarımız ve alanında uzman kadromuzla her tedavide en yüksek standarttayız.
+          </p>
+
+          {/* Stats row */}
+          <div className="flex items-center justify-center gap-8 sm:gap-16">
+            {[
+              { value: "15+", label: "Yıl Deneyim" },
+              { value: "5.000+", label: "Mutlu Hasta" },
+              { value: "%98", label: "Memnuniyet" },
+            ].map(({ value, label }, i) => (
+              <div key={label} className="text-center">
+                <p className="font-cormorant text-4xl font-bold leading-none" style={{ color: "#C9A84C" }}>{value}</p>
+                <p className="text-[10px] tracking-[0.2em] uppercase mt-1.5 font-medium" style={{ color: "rgba(240,235,224,0.4)" }}>{label}</p>
+              </div>
+            ))}
+          </div>
+        </FadeIn>
+      </section>
+
+      {/* ══════════════════════════════════════
+          9. 3-STEP PROCESS
       ══════════════════════════════════════ */}
       <section className="py-28 sm:py-36 relative overflow-hidden" style={{ background: G.navy }}>
         {/* Large ghost numeral */}
