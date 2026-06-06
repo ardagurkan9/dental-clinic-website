@@ -60,24 +60,24 @@ const posts = [
 
 export default function BlogPage() {
   return (
-    <div className="bg-[#FAF7F2] min-h-screen font-outfit">
+    <div className="min-h-screen font-outfit" style={{ background: "#FAF8F5" }}>
       <PageHero
         title="Blog"
         crumbs={[{ label: "Ana Sayfa", href: "/" }, { label: "Blog" }]}
       />
 
       {/* Intro */}
-      <section className="py-16 sm:py-20">
+      <section className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-12">
+          <div className="mb-14">
             <div className="flex items-center gap-3 mb-5">
-              <div className="h-px w-8 bg-[#8B7355]" />
-              <span className="text-[#8B7355] text-[11px] tracking-[0.22em] uppercase font-medium">Güncel İçerikler</span>
+              <div className="h-px w-8" style={{ background: "#B8922A" }} />
+              <span className="text-[10px] tracking-[0.28em] uppercase font-medium" style={{ color: "#B8922A" }}>Güncel İçerikler</span>
             </div>
-            <h2 className="font-cormorant text-4xl sm:text-5xl font-light text-[#1C1A15] max-w-lg leading-tight">
-              Diş Sağlığı <span className="italic">Rehberi</span>
+            <h2 className="font-cormorant text-5xl font-light max-w-lg leading-tight" style={{ color: "#0F1E35" }}>
+              Diş Sağlığı <span className="italic font-medium" style={{ color: "#B8922A" }}>Rehberi</span>
             </h2>
-            <p className="text-[#6B5F4E] mt-4 text-[15px] leading-relaxed max-w-xl">
+            <p className="mt-4 text-[15px] leading-relaxed max-w-xl" style={{ color: "#8A7E70" }}>
               Uzmanlarımızın kaleminden diş sağlığı ipuçları, tedavi bilgileri ve sektörden haberler.
             </p>
           </div>
@@ -87,33 +87,38 @@ export default function BlogPage() {
             {posts.map((post) => (
               <article
                 key={post.slug}
-                className="bg-white border border-[#DDD0B8] overflow-hidden hover:border-[#8B7355] transition-colors duration-300 flex flex-col group"
+                className="overflow-hidden flex flex-col group glass-card glass-card-hover transition-all duration-300"
               >
                 {/* Thumbnail */}
-                <div className="h-44 bg-gradient-to-br from-[#F2ECE0] to-[#EDE0C8] flex items-center justify-center relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-8 h-8 border-t border-l border-[#B8966A]/50" />
-                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r border-[#B8966A]/50" />
-                  <svg className="w-9 h-9 text-[#B8966A]/40 relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.8}>
+                <div className="h-48 flex items-center justify-center relative overflow-hidden"
+                  style={{ background: "linear-gradient(135deg, #F5F0EA 0%, #EDE5D8 100%)" }}>
+                  <div className="absolute top-0 left-0 w-8 h-8 border-t border-l" style={{ borderColor: "rgba(184,146,42,0.4)" }} />
+                  <div className="absolute bottom-0 right-0 w-8 h-8 border-b border-r" style={{ borderColor: "rgba(184,146,42,0.4)" }} />
+                  <svg className="w-10 h-10 relative z-10 transition-transform duration-500 group-hover:scale-110" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={0.8}
+                    style={{ color: "rgba(184,146,42,0.4)" }}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
                   </svg>
                 </div>
 
-                <div className="p-6 flex flex-col flex-1">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[10px] font-medium text-[#8B7355] tracking-[0.18em] uppercase border border-[#DDD0B8] px-2.5 py-1">
+                <div className="p-7 flex flex-col flex-1">
+                  <div className="flex items-center justify-between mb-5">
+                    <span className="text-[10px] font-medium tracking-[0.18em] uppercase px-3 py-1"
+                      style={{ color: "#B8922A", border: "1px solid rgba(184,146,42,0.25)" }}>
                       {post.category}
                     </span>
-                    <span className="text-xs text-[#9B8E7D]">{post.readTime}</span>
+                    <span className="text-xs" style={{ color: "#8A7E70" }}>{post.readTime}</span>
                   </div>
 
-                  <h3 className="font-cormorant text-xl font-medium text-[#1C1A15] mb-2 leading-snug group-hover:text-[#8B7355] transition-colors">
+                  <h3 className="font-cormorant text-xl font-semibold mb-2 leading-snug hover-gold">
                     {post.title}
                   </h3>
-                  <p className="text-[#6B5F4E] text-sm leading-relaxed flex-1">{post.excerpt}</p>
+                  <p className="text-sm leading-relaxed flex-1" style={{ color: "#8A7E70" }}>{post.excerpt}</p>
 
-                  <div className="flex items-center justify-between mt-5 pt-5 border-t border-[#F2ECE0]">
-                    <span className="text-xs text-[#9B8E7D]">{post.date}</span>
-                    <span className="text-xs font-medium text-[#8B7355] tracking-widest uppercase group-hover:text-[#B8966A] transition-colors">
+                  <div className="flex items-center justify-between mt-6 pt-5"
+                    style={{ borderTop: "1px solid rgba(184,146,42,0.1)" }}>
+                    <span className="text-xs" style={{ color: "#8A7E70" }}>{post.date}</span>
+                    <span className="text-[10px] font-semibold tracking-[0.15em] uppercase transition-colors duration-300"
+                      style={{ color: "#B8922A" }}>
                       Devamını Oku →
                     </span>
                   </div>

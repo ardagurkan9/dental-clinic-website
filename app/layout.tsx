@@ -27,6 +27,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="tr" className={`${cormorant.variable} ${outfit.variable}`}>
       <body>
+        <div className="grain" aria-hidden="true" />
         <Header />
         <main className="pt-16">{children}</main>
       </body>

@@ -14,6 +14,7 @@ const config: Config = {
       animation: {
         "fade-up": "fadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) both",
         "fade-in": "fadeIn 1s ease both",
+        "pulse-subtle": "pulseSubtle 5s ease-in-out infinite",
       },
       keyframes: {
         fadeUp: {
@@ -23,6 +24,10 @@ const config: Config = {
         fadeIn: {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
+        },
+        pulseSubtle: {
+          "0%, 100%": { opacity: "0.35", transform: "scale(1)" },
+          "50%": { opacity: "0.6", transform: "scale(1.12)" },
         },
       },
     },

@@ -4,9 +4,115 @@
 
 @layer base {
   body {
-    background-color: #FAF7F2;
+    background-color: #FAF8F5;
     font-family: var(--font-outfit), system-ui, sans-serif;
-    color: #1C1A15;
+    color: #0F1E35;
     -webkit-font-smoothing: antialiased;
   }
+
+  ::selection {
+    background-color: rgba(184, 146, 42, 0.22);
+    color: #0F1E35;
+  }
 }
+
+/* Grain overlay */
+.grain {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.022;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Float animations for ambient orbs */
+@keyframes floatOrb {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  40% { transform: translateY(-36px) scale(1.05); }
+  70% { transform: translateY(-18px) scale(0.97); }
+}
+
+@keyframes floatOrbSlow {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-26px) rotate(4deg); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.15); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-float-orb { animation: floatOrb 9s ease-in-out infinite; }
+.animate-float-orb-slow { animation: floatOrbSlow 13s ease-in-out infinite 2.5s; }
+.animate-pulse-glow { animation: pulseGlow 5s ease-in-out infinite; }
+.animate-marquee { animation: marquee 22s linear infinite; }
+
+/* Glass card utility */
+.glass-card {
+  background: #FFFFFF;
+  border: 1px solid rgba(184, 146, 42, 0.13);
+  box-shadow: 0 2px 20px rgba(15, 30, 53, 0.05);
+}
+
+.glass-card-hover:hover {
+  border-color: rgba(184, 146, 42, 0.32);
+  box-shadow: 0 10px 40px rgba(15, 30, 53, 0.09);
+}
+
+/* Hover utilities — CSS-only, no JS event handlers needed */
+.footer-link {
+  color: rgba(255,255,255,0.3);
+  transition: color 0.2s ease;
+}
+.footer-link:hover { color: #C9A84C; }
+
+.footer-link-wa {
+  color: rgba(255,255,255,0.3);
+  transition: color 0.2s ease;
+}
+.footer-link-wa:hover { color: #4ADE80; }
+
+.crumb-link {
+  color: rgba(255,255,255,0.35);
+  transition: color 0.2s ease;
+}
+.crumb-link:hover { color: #C9A84C; }
+
+.contact-link-ivory {
+  color: #F0EBE0;
+  transition: color 0.2s ease;
+}
+.contact-link-ivory:hover { color: #C9A84C; }
+
+.btn-navy {
+  background: #0F1E35;
+  transition: background 0.3s ease;
+}
+.btn-navy:hover { background: #B8922A; }
+
+.btn-outline-gold {
+  border: 1px solid rgba(184,146,42,0.28);
+  color: #374969;
+  transition: border-color 0.3s ease, color 0.3s ease;
+}
+.btn-outline-gold:hover {
+  border-color: #B8922A;
+  color: #0F1E35;
+}
+
+.hover-gold {
+  color: #0F1E35;
+  transition: color 0.3s ease;
+}
+.hover-gold:hover { color: #B8922A; }

@@ -1,9 +1,35 @@
 "use client";
 
-import { useState, useRef, useEffect, type TransitionEvent } from "react";
+import { useState, useRef } from "react";
 import Link from "next/link";
+import {
+  motion,
+  useInView,
+  AnimatePresence,
+  useMotionValue,
+  animate as motionAnimate,
+} from "framer-motion";
+import TreatmentCarousel from "@/components/ui/carousel-card-1";
 
-// ─── Icons ──────────────────────────────────────────────────────────────────
+// ─── Design tokens ───────────────────────────────────────────────────────────
+
+const G = {
+  deep:      "#F5F0EA",   // warm ivory — alternating section bg
+  ink:       "#FAF8F5",   // warm near-white
+  surface:   "#FFFFFF",   // pure white
+  elevated:  "#EDE5D8",   // warm sand
+  gold:      "#B8922A",   // champagne gold — primary accent
+  goldMid:   "#C9A84C",   // lighter champagne
+  goldSoft:  "#DEC882",   // soft gold tint
+  navy:      "#0F1E35",   // deep navy — primary text + dark sections
+  cream:     "#0F1E35",   // alias for text
+  dimCream:  "#374969",   // navy-gray secondary text
+  muted:     "#8A7E70",   // warm muted
+  border:    "rgba(184,146,42,0.15)",
+  borderHov: "rgba(184,146,42,0.38)",
+};
+
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 function WhatsAppIcon({ size = 18 }: { size?: number }) {
   return (
@@ -23,7 +49,7 @@ function ArrowRight({ className = "w-4 h-4" }: { className?: string }) {
 
 function StarIcon() {
   return (
-    <svg className="w-3.5 h-3.5 fill-[#B8966A] text-[#B8966A]" viewBox="0 0 24 24">
+    <svg className="w-3.5 h-3.5" fill="#D4A017" viewBox="0 0 24 24">
       <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
     </svg>
   );
@@ -34,71 +60,150 @@ function ChevronIcon({ open }: { open: boolean }) {
     <svg
       className="w-4 h-4 transition-transform duration-300"
       style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={2}
-      viewBox="0 0 24 24"
+      fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
     >
       <polyline points="6 9 12 15 18 9" />
     </svg>
   );
 }
 
-// ─── Responsive visible-card count ──────────────────────────────────────────
+// ─── Animation helpers ────────────────────────────────────────────────────────
 
-function useVisibleCount() {
-  const [count, setCount] = useState(4);
-  useEffect(() => {
-    const update = () => {
-      if (window.innerWidth >= 1024) setCount(4);
-      else if (window.innerWidth >= 640) setCount(2);
-      else setCount(1);
-    };
-    update();
-    window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
-  }, []);
-  return count;
+const ease = [0.16, 1, 0.3, 1] as const;
+
+function FadeIn({ children, delay = 0, className = "", from = "up" }: {
+  children: React.ReactNode; delay?: number; className?: string; from?: "up" | "left" | "right" | "none";
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-80px" });
+  const initial = { opacity: 0, y: from === "up" ? 36 : 0, x: from === "left" ? -40 : from === "right" ? 40 : 0 };
+  return (
+    <motion.div ref={ref} initial={initial} animate={inView ? { opacity: 1, y: 0, x: 0 } : initial}
+      transition={{ duration: 0.8, delay, ease }} className={className}>
+      {children}
+    </motion.div>
+  );
 }
 
-// ─── Overline helper ────────────────────────────────────────────────────────
+function StaggerGrid({ children, className = "", stagger = 0.1 }: {
+  children: React.ReactNode; className?: string; stagger?: number;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-60px" });
+  return (
+    <motion.div ref={ref} initial="hidden" animate={inView ? "visible" : "hidden"}
+      variants={{ hidden: {}, visible: { transition: { staggerChildren: stagger } } }} className={className}>
+      {children}
+    </motion.div>
+  );
+}
 
-function Overline({ children, centered = false }: { children: React.ReactNode; centered?: boolean }) {
+const staggerItem = {
+  hidden: { opacity: 0, y: 28 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease } },
+};
+
+// ─── Animated stat counter ───────────────────────────────────────────────────
+
+function AnimatedStat({ end, prefix = "", suffix = "", label, textValue }: {
+  end?: number; prefix?: string; suffix?: string; label: string; textValue?: string;
+}) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const motionVal = useMotionValue(0);
+  const [displayed, setDisplayed] = useState(textValue ?? "0");
+
+  useState(() => {
+    if (!inView || end === undefined) return;
+    const unsub = motionVal.on("change", (v) => {
+      const r = Math.round(v);
+      setDisplayed(end >= 1000 ? r.toLocaleString("tr-TR") : String(r));
+    });
+    const ctrl = motionAnimate(motionVal, end, { duration: 1.8, ease: "easeOut" });
+    return () => { ctrl.stop(); unsub(); };
+  });
+
+  return (
+    <motion.div ref={ref} initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ duration: 0.6, ease }} className="py-10 px-6 text-center">
+      <p className="font-cormorant text-5xl sm:text-6xl font-bold" style={{ color: G.navy }}>
+        {textValue ? textValue : `${prefix}${displayed}${suffix}`}
+      </p>
+      <div className="h-px w-8 mx-auto my-3" style={{ background: G.gold }} />
+      <p className="text-[11px] tracking-[0.2em] uppercase font-medium" style={{ color: G.muted }}>{label}</p>
+    </motion.div>
+  );
+}
+
+// ─── Overline ─────────────────────────────────────────────────────────────────
+
+function Overline({ children, centered = false, light = false }: { children: React.ReactNode; centered?: boolean; light?: boolean }) {
+  const color = light ? "rgba(201,168,76,0.9)" : G.gold;
   return (
     <div className={`flex items-center gap-3 mb-5 ${centered ? "justify-center" : ""}`}>
-      <div className="h-px w-8 bg-[#8B7355] shrink-0" />
-      <span className="text-[#8B7355] text-[11px] tracking-[0.22em] uppercase font-medium font-outfit">
+      <div className="h-px w-8 shrink-0" style={{ background: color }} />
+      <span className="text-[10px] tracking-[0.28em] uppercase font-medium font-outfit" style={{ color }}>
         {children}
       </span>
-      {centered && <div className="h-px w-8 bg-[#8B7355] shrink-0" />}
+      {centered && <div className="h-px w-8 shrink-0" style={{ background: color }} />}
     </div>
   );
 }
 
 // ─── Data ────────────────────────────────────────────────────────────────────
 
-const services = [
-  { href: "/tedaviler/diseti-hastaliklari", title: "Dişeti Hastalıkları", desc: "Dişeti hastalıklarını erken teşhis ve ileri tedavi yöntemleriyle, kök yüzeyi düzlemesi ve cerrahi uygulamalarla tedavi ediyoruz." },
-  { href: "/tedaviler/implant", title: "İmplant & Çene Cerrahisi", desc: "Eksik dişlerinizi titanyum köklere sahip, doğal görünümlü ve ömür boyu dayanıklı implantlarla tamamlıyoruz." },
-  { href: "/tedaviler/mikrocerrahi", title: "Mikrocerrahi & Plastik Cerrahi", desc: "Periodontal plastik cerrahi ve mikroskop destekli hassas müdahalelerle estetik ve fonksiyonel sonuçlar elde ediyoruz." },
-  { href: "/tedaviler/kemik-grefti", title: "Kemik Grefti & Rejenerasyon", desc: "Kemik ve doku kayıplarını rejeneratif tekniklerle yeniden yapılandırarak implant için sağlam bir zemin oluşturuyoruz." },
-  { href: "/tedaviler/protetik", title: "Estetik Protetik & Zirkonyum", desc: "Metal içermeyen, biyouyumlu zirkonyum kronlarla doğal diş görünümünü yakalayın. Sağlam, estetik ve uzun ömürlü." },
-  { href: "/tedaviler/gulus-tasarimi", title: "Gülüş Tasarımı", desc: "Dijital gülüş tasarımı teknolojisiyle tedaviye başlamadan önce sonucunuzu görün. Kişiye özel estetik çözümler." },
-  { href: "/tedaviler/kanal", title: "Kanal Tedavisi", desc: "Ağrılı diş sinir sorunlarını, modern nikel-titanyum eğeleme sistemi ve son teknoloji ekipmanlarla ağrısız biçimde tedavi ediyoruz." },
-  { href: "/tedaviler/bruksizm", title: "Bruksizm & Masseter Botoksu", desc: "Diş gıcırdatma ve çene kaslarını rahatlatan masseter botoksu uygulamalarıyla ağrılarınızı ve estetik kaygılarınızı gideriyoruz." },
-  { href: "/tedaviler/dijital", title: "Dijital Diş Hekimliği", desc: "CAD/CAM teknolojisi, dijital ölçü ve 3D planlama sistemleriyle daha hızlı, hassas ve konforlu tedavi sunuyoruz." },
+const serviceCards = [
+  {
+    id: 1,
+    imgUrl: "https://images.unsplash.com/photo-1588776814546-1ffedac33d34?auto=format&fit=crop&w=800&q=80",
+    content: "Dişeti Hastalıkları — Dişeti hastalıklarını erken teşhis ve ileri tedavi yöntemleriyle, kök yüzeyi düzlemesi ve cerrahi uygulamalarla kalıcı olarak tedavi ediyoruz.",
+  },
+  {
+    id: 2,
+    imgUrl: "https://images.unsplash.com/photo-1606811971618-4486d14f3f99?auto=format&fit=crop&w=800&q=80",
+    content: "İmplant & Çene Cerrahisi — Eksik dişlerinizi titanyum köklere sahip, doğal görünümlü ve ömür boyu dayanıklı implantlarla tamamlıyoruz.",
+  },
+  {
+    id: 3,
+    imgUrl: "https://images.unsplash.com/photo-1559757175-0eb30cd8c063?auto=format&fit=crop&w=800&q=80",
+    content: "Mikrocerrahi & Plastik Cerrahi — Periodontal plastik cerrahi ve mikroskop destekli hassas müdahalelerle estetik ve fonksiyonel sonuçlar elde ediyoruz.",
+  },
+  {
+    id: 4,
+    imgUrl: "https://images.unsplash.com/photo-1629909613654-28e377c37b09?auto=format&fit=crop&w=800&q=80",
+    content: "Kemik Grefti & Rejenerasyon — Kemik ve doku kayıplarını rejeneratif tekniklerle yeniden yapılandırarak implant için sağlam bir zemin oluşturuyoruz.",
+  },
+  {
+    id: 5,
+    imgUrl: "https://images.unsplash.com/photo-1607990281513-2c110a25bd8c?auto=format&fit=crop&w=800&q=80",
+    content: "Estetik Protetik & Zirkonyum — Metal içermeyen, biyouyumlu zirkonyum kronlarla doğal diş görünümünü yakalayın. Sağlam, estetik ve 15-20 yıl ömürlü.",
+  },
+  {
+    id: 6,
+    imgUrl: "https://images.unsplash.com/photo-1598256778327-c427b3daca97?auto=format&fit=crop&w=800&q=80",
+    content: "Gülüş Tasarımı — Dijital gülüş tasarımı teknolojisiyle tedaviye başlamadan önce sonucunuzu görün. Kişiye özel estetik çözümler sunuyoruz.",
+  },
+  {
+    id: 7,
+    imgUrl: "https://images.unsplash.com/photo-1609840114035-3c981b782dfe?auto=format&fit=crop&w=800&q=80",
+    content: "Kanal Tedavisi — Modern nikel-titanyum eğeleme sistemi ve son teknoloji ekipmanlarla ağrılı diş sinir sorunlarını ağrısız biçimde tedavi ediyoruz.",
+  },
+  {
+    id: 8,
+    imgUrl: "https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=800&q=80",
+    content: "Bruksizm & Masseter Botoksu — Diş gıcırdatma ve çene kaslarını rahatlatan masseter botoksu uygulamalarıyla ağrılarınızı ve estetik kaygılarınızı gideriyoruz.",
+  },
+  {
+    id: 9,
+    imgUrl: "https://images.unsplash.com/photo-1551076805-e1869033e561?auto=format&fit=crop&w=800&q=80",
+    content: "Dijital Diş Hekimliği — CAD/CAM teknolojisi, dijital ölçü ve 3D planlama sistemleriyle daha hızlı, hassas ve konforlu tedavi sunuyoruz.",
+  },
 ];
 
 const reviews = [
   { name: "Mehmet K.", date: "Mart 2025", treatment: "Dental İmplant", text: "İmplant tedavim için başka kliniklerle görüştüm ama bu klinik gerçekten fark yaratıyor. Hem doktor hem ekip son derece ilgili ve profesyonel. Sonuçtan çok memnun kaldım." },
   { name: "Ayşe S.", date: "Şubat 2025", treatment: "Gülüş Tasarımı", text: "Gülüş tasarımım hayatımı değiştirdi. Tedaviye başlamadan önce sonucu görmek beni çok rahatlattı. Şimdi her fırsatta gülümsüyorum!" },
   { name: "Fatma D.", date: "Ocak 2025", treatment: "Diş Beyazlatma", text: "Diş beyazlatma işlemim tek seansta tamamlandı ve inanılmaz bir fark oldu. Klinik çok temiz ve hijyenik. Herkese gönül rahatlığıyla tavsiye ederim." },
-];
-
-const beforeAfterItems = [
-  { label: "Dental İmplant" },
-  { label: "Gülüş Tasarımı" },
-  { label: "Zirkonyum Kron" },
 ];
 
 const steps = [
@@ -123,211 +228,166 @@ const WA_LINK = "https://wa.me/902121234567?text=Merhaba%2C%20randevu%20almak%20
 export default function LandingPage() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
-  // ── Carousel ────────────────────────────────────────────────────────────────
-  const [carouselCards, setCarouselCards] = useState(services);
-  const [slideOffset, setSlideOffset] = useState(0);
-  const [isSliding, setIsSliding] = useState(false);
-  const trackRef = useRef<HTMLDivElement>(null);
-  const directionRef = useRef<"next" | "prev" | null>(null);
-  const visibleCount = useVisibleCount();
-
-  const slideStep = (): number => {
-    const first = trackRef.current?.children[0] as HTMLElement | undefined;
-    const second = trackRef.current?.children[1] as HTMLElement | undefined;
-    if (!first || !second) return 0;
-    return second.offsetLeft - first.offsetLeft;
-  };
-
-  const setTransition = (enabled: boolean) => {
-    if (trackRef.current) {
-      trackRef.current.style.transition = enabled
-        ? "transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
-        : "none";
-    }
-  };
-
-  useEffect(() => {
-    setTransition(false);
-    setSlideOffset(0);
-    setIsSliding(false);
-    directionRef.current = null;
-    requestAnimationFrame(() => setTransition(true));
-  }, [visibleCount]);
-
-  const goNext = () => {
-    if (isSliding) return;
-    const step = slideStep();
-    directionRef.current = "next";
-    setIsSliding(true);
-    setTransition(false);
-    trackRef.current?.getBoundingClientRect();
-    requestAnimationFrame(() => { setTransition(true); setSlideOffset(step); });
-  };
-
-  const goPrev = () => {
-    if (isSliding) return;
-    const step = slideStep();
-    directionRef.current = "prev";
-    setIsSliding(true);
-    setTransition(false);
-    setCarouselCards((cards) => [cards[cards.length - 1], ...cards.slice(0, -1)]);
-    setSlideOffset(step);
-    requestAnimationFrame(() => { setTransition(true); setSlideOffset(0); });
-  };
-
-  const handleTransitionEnd = (event: TransitionEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget || event.propertyName !== "transform") return;
-    if (directionRef.current === "next") {
-      setTransition(false);
-      setCarouselCards((cards) => [...cards.slice(1), cards[0]]);
-      setSlideOffset(0);
-      requestAnimationFrame(() => setTransition(true));
-    }
-    directionRef.current = null;
-    setIsSliding(false);
-  };
+  const heroContainer = { hidden: {}, visible: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } } };
+  const heroItem = { hidden: { opacity: 0, y: 32 }, visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease } } };
 
   return (
-    <div className="bg-[#FAF7F2] overflow-x-hidden font-outfit">
+    <div className="overflow-x-hidden font-outfit" style={{ background: G.ink }}>
 
       {/* ══════════════════════════════════════
           1. HERO
       ══════════════════════════════════════ */}
-      <section className="relative min-h-[95vh] flex items-center overflow-hidden bg-[#FAF7F2]">
-        {/* Subtle dot-grid texture */}
-        <div
-          className="absolute inset-0 opacity-[0.025] pointer-events-none"
-          style={{ backgroundImage: "radial-gradient(circle, #1C1A15 1px, transparent 1px)", backgroundSize: "28px 28px" }}
-        />
-        {/* Left accent line */}
-        <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-gradient-to-b from-transparent via-[#B8966A]/35 to-transparent pointer-events-none" />
+      <section className="relative min-h-[100vh] flex items-center overflow-hidden" style={{ background: G.surface }}>
 
-        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-28 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-12 lg:gap-20 items-center w-full">
+        {/* Subtle warm dot grid */}
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ backgroundImage: `radial-gradient(circle, rgba(184,146,42,0.07) 1px, transparent 1px)`, backgroundSize: "40px 40px" }} />
 
-          {/* Left: editorial headline */}
-          <div>
-            <div
-              className="animate-fade-up flex items-center gap-3 mb-8"
-              style={{ animationDelay: "0ms" }}
-            >
-              <div className="h-px w-10 bg-[#8B7355]" />
-              <span className="text-[#8B7355] text-[11px] tracking-[0.22em] uppercase font-medium">
+        {/* Warm ambient orbs */}
+        <div className="absolute -left-64 top-1/3 w-[700px] h-[700px] rounded-full pointer-events-none animate-float-orb"
+          style={{ background: `radial-gradient(circle, rgba(184,146,42,0.1) 0%, rgba(222,200,130,0.04) 50%, transparent 70%)` }} />
+        <div className="absolute -right-32 -top-32 w-[550px] h-[550px] rounded-full pointer-events-none animate-float-orb-slow"
+          style={{ background: `radial-gradient(circle, rgba(184,146,42,0.07) 0%, transparent 65%)` }} />
+
+        {/* Thin gold side accent */}
+        <div className="absolute left-0 top-0 bottom-0 w-px pointer-events-none"
+          style={{ background: `linear-gradient(to bottom, transparent, rgba(184,146,42,0.4), transparent)` }} />
+        <div className="absolute bottom-0 left-0 right-0 h-px pointer-events-none"
+          style={{ background: `linear-gradient(to right, transparent, rgba(184,146,42,0.2), transparent)` }} />
+
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-32 grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-12 lg:gap-20 items-center w-full">
+
+          <motion.div variants={heroContainer} initial="hidden" animate="visible">
+            {/* Eyebrow */}
+            <motion.div variants={heroItem} className="flex items-center gap-4 mb-10">
+              <div className="h-px w-12" style={{ background: G.gold }} />
+              <span className="text-[10px] tracking-[0.3em] uppercase font-medium" style={{ color: G.gold }}>
                 Kadıköy, İstanbul · Ücretsiz İlk Muayene
               </span>
-            </div>
+            </motion.div>
 
-            <h1 className="font-cormorant leading-[1.0] mb-8">
-              <span
-                className="block font-light italic text-[#1C1A15] animate-fade-up"
-                style={{ fontSize: "clamp(48px,7.5vw,84px)", animationDelay: "80ms" }}
-              >
+            {/* Headline */}
+            <h1 className="font-cormorant leading-[0.92] mb-10">
+              <motion.span variants={heroItem} className="block font-extralight italic" style={{ fontSize: "clamp(56px,8.5vw,104px)", color: G.navy }}>
                 Gülüşünüzü
-              </span>
-              <span
-                className="block font-light text-[#1C1A15] animate-fade-up"
-                style={{ fontSize: "clamp(48px,7.5vw,84px)", animationDelay: "160ms" }}
-              >
+              </motion.span>
+              <motion.span variants={heroItem} className="block font-light" style={{ fontSize: "clamp(56px,8.5vw,104px)", color: G.dimCream }}>
                 güvenle yeniden
-              </span>
-              <span
-                className="block font-bold text-[#8B7355] animate-fade-up"
-                style={{ fontSize: "clamp(48px,7.5vw,84px)", animationDelay: "240ms" }}
-              >
+              </motion.span>
+              <motion.span variants={heroItem} className="block font-bold italic" style={{ fontSize: "clamp(56px,8.5vw,104px)", color: G.gold }}>
                 tasarlıyoruz.
-              </span>
+              </motion.span>
             </h1>
 
-            <p
-              className="text-[#6B5F4E] text-lg leading-relaxed mb-10 max-w-[480px] animate-fade-up"
-              style={{ animationDelay: "320ms" }}
-            >
+            <motion.p variants={heroItem} className="text-[17px] leading-relaxed mb-12 max-w-[480px]" style={{ color: G.muted }}>
               15 yılı aşkın deneyim ve son teknoloji ekipmanlarımızla hayalinizdeki gülüşe en kısa sürede kavuşturuyoruz.
-            </p>
+            </motion.p>
 
-            <div
-              className="flex flex-wrap gap-4 animate-fade-up"
-              style={{ animationDelay: "400ms" }}
-            >
-              <a
-                href={WA_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group inline-flex items-center gap-3 bg-[#1C1A15] text-[#FAF7F2] font-medium px-8 py-4 text-sm tracking-wide hover:bg-[#2A261E] transition-colors duration-300"
-              >
+            <motion.div variants={heroItem} className="flex flex-wrap gap-4">
+              <a href={WA_LINK} target="_blank" rel="noopener noreferrer"
+                className="group inline-flex items-center gap-3 font-semibold px-9 py-4 text-sm tracking-wide transition-all duration-300 cursor-pointer text-white"
+                style={{ background: G.navy }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = G.gold; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = G.navy; }}>
                 <WhatsAppIcon />
                 WhatsApp ile Randevu Al
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
               </a>
-              <Link
-                href="/tedaviler/implant"
-                className="inline-flex items-center gap-2 border border-[#DDD0B8] text-[#1C1A15] font-medium px-8 py-4 text-sm tracking-wide hover:border-[#8B7355] hover:text-[#8B7355] transition-all duration-300"
-              >
+              <Link href="/tedaviler/implant"
+                className="inline-flex items-center gap-2 font-medium px-9 py-4 text-sm tracking-wide transition-all duration-300 cursor-pointer"
+                style={{ border: `1px solid rgba(184,146,42,0.3)`, color: G.dimCream }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = G.gold; (e.currentTarget as HTMLElement).style.color = G.navy; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = "rgba(184,146,42,0.3)"; (e.currentTarget as HTMLElement).style.color = G.dimCream; }}>
                 Tedavilerimiz
               </Link>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* Right: concentric ring ornament */}
-          <div
-            className="hidden lg:flex items-center justify-center relative shrink-0 animate-fade-in"
-            style={{ animationDelay: "300ms" }}
-          >
-            {/* Outer ring */}
-            <div className="relative w-[400px] h-[400px] rounded-full border border-[#DDD0B8] flex items-center justify-center">
+          {/* Hero decorative orb */}
+          <motion.div initial={{ opacity: 0, scale: 0.88 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 1.2, delay: 0.4, ease }}
+            className="hidden lg:flex items-center justify-center relative shrink-0">
 
-              {/* Cardinal dots on outer ring */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#B8966A]" />
-              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 w-2 h-2 rounded-full bg-[#B8966A]" />
-              <div className="absolute left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#B8966A]" />
-              <div className="absolute right-0 top-1/2 translate-x-1/2 -translate-y-1/2 w-2 h-2 rounded-full bg-[#B8966A]" />
+            <div className="relative w-[420px] h-[420px] rounded-full flex items-center justify-center"
+              style={{ border: `1px solid rgba(184,146,42,0.2)`, boxShadow: `0 0 100px rgba(184,146,42,0.06)` }}>
 
-              {/* Mid ring */}
-              <div className="w-[295px] h-[295px] rounded-full border border-[#B8966A]/30 flex items-center justify-center">
+              {/* Orbiting gold dots */}
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 100, repeat: Infinity, ease: "linear" }}
+                className="absolute inset-0 rounded-full">
+                {[
+                  "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
+                  "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
+                  "left-0 top-1/2 -translate-x-1/2 -translate-y-1/2",
+                  "right-0 top-1/2 translate-x-1/2 -translate-y-1/2",
+                ].map((cls, i) => (
+                  <div key={i} className={`absolute ${cls} w-2.5 h-2.5 rounded-full`}
+                    style={{ background: G.gold, boxShadow: `0 0 8px rgba(184,146,42,0.5)` }} />
+                ))}
+              </motion.div>
 
-                {/* Inner filled circle */}
-                <div className="w-[190px] h-[190px] rounded-full bg-[#8B7355]/[0.06] border border-[#8B7355]/20 flex items-center justify-center">
-                  {/* Tooth silhouette */}
-                  <svg className="w-16 h-16 text-[#B8966A]/45" fill="none" stroke="currentColor" strokeWidth={1} viewBox="0 0 64 64">
+              <div className="w-[310px] h-[310px] rounded-full flex items-center justify-center"
+                style={{ border: `1px solid rgba(184,146,42,0.12)` }}>
+                <div className="w-[200px] h-[200px] rounded-full flex items-center justify-center"
+                  style={{ background: "rgba(184,146,42,0.04)", border: `1px solid rgba(184,146,42,0.1)` }}>
+                  <svg className="w-20 h-20" fill="none" stroke="currentColor" strokeWidth={0.8} viewBox="0 0 64 64" style={{ color: `rgba(184,146,42,0.35)` }}>
                     <path d="M32 6C22 6 14 14 14 24c0 5 1.5 9.5 3 13 2 5 4.5 19 6.5 19 1.5 0 3-6 8.5-6s7 6 8.5 6c2 0 4.5-14 6.5-19 1.5-3.5 3-8 3-13 0-10-8-18-18-18z" />
                     <path strokeLinecap="round" d="M24 24c0-4 4-7 8-7s8 3 8 7" />
                   </svg>
                 </div>
               </div>
 
-              {/* Experience badge — bottom-right */}
-              <div className="absolute -bottom-3 -right-8 bg-[#1C1A15] px-6 py-5 shadow-2xl z-10">
-                <p className="font-cormorant text-5xl font-bold leading-none text-[#B8966A]">15+</p>
-                <p className="text-[10px] tracking-[0.18em] uppercase text-[#FAF7F2]/50 mt-1.5">Yıl Deneyim</p>
-              </div>
+              {/* 15+ badge */}
+              <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 0.9, ease }}
+                className="absolute -bottom-4 -right-10 px-7 py-5 z-10 text-white"
+                style={{ background: G.navy, boxShadow: "0 8px 32px rgba(15,30,53,0.2)" }}>
+                <p className="font-cormorant text-5xl font-bold leading-none">15<span style={{ color: G.goldMid }}>+</span></p>
+                <p className="text-[10px] tracking-[0.2em] uppercase opacity-60 mt-1.5">Yıl Deneyim</p>
+              </motion.div>
 
-              {/* Patients badge — top-left */}
-              <div className="absolute -top-3 -left-8 bg-[#FAF7F2] border border-[#DDD0B8] px-5 py-3 shadow-sm z-10">
-                <p className="font-cormorant text-2xl font-bold text-[#1C1A15] leading-none">5.000+</p>
-                <p className="text-[10px] tracking-[0.18em] uppercase text-[#6B5F4E] mt-1">Mutlu Hasta</p>
-              </div>
+              {/* 5000+ badge */}
+              <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.7, delay: 1.0, ease }}
+                className="absolute -top-4 -left-10 px-6 py-4 z-10"
+                style={{ background: "#FFFFFF", border: `1px solid rgba(184,146,42,0.25)`, boxShadow: "0 8px 32px rgba(15,30,53,0.08)" }}>
+                <p className="font-cormorant text-3xl font-bold leading-none" style={{ color: G.navy }}>5.000<span style={{ color: G.gold }}>+</span></p>
+                <p className="text-[10px] tracking-[0.2em] uppercase mt-1" style={{ color: G.gold }}>Mutlu Hasta</p>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         </div>
-
-        {/* Bottom rule */}
-        <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#DDD0B8] to-transparent pointer-events-none" />
       </section>
+
+      {/* ══════════════════════════════════════
+          MARQUEE BAND — deep navy
+      ══════════════════════════════════════ */}
+      <div className="relative overflow-hidden py-4" style={{ background: G.navy }}>
+        <div className="flex animate-marquee whitespace-nowrap">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <span key={i} className="inline-flex items-center gap-6 mx-8 text-[10px] tracking-[0.3em] uppercase font-medium"
+              style={{ color: "rgba(222,200,130,0.65)" }}>
+              <span style={{ color: G.goldMid }}>◆</span>Dental İmplant
+              <span style={{ color: G.goldMid }}>◆</span>Gülüş Tasarımı
+              <span style={{ color: G.goldMid }}>◆</span>Zirkonyum Kronlar
+              <span style={{ color: G.goldMid }}>◆</span>Kanal Tedavisi
+              <span style={{ color: G.goldMid }}>◆</span>JCI Akreditasyonu
+            </span>
+          ))}
+        </div>
+      </div>
 
       {/* ══════════════════════════════════════
           2. STATS BAR
       ══════════════════════════════════════ */}
-      <section className="bg-[#1C1A15]">
+      <section style={{ background: G.surface, borderBottom: `1px solid ${G.border}` }}>
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 divide-x divide-[#2A261E]">
+          <div className="grid grid-cols-2 md:grid-cols-4">
             {[
-              { value: "15+", label: "Yıl Deneyim" },
-              { value: "5.000+", label: "Mutlu Hasta" },
-              { value: "%98", label: "Memnuniyet" },
-              { value: "JCI", label: "Akreditasyonu" },
-            ].map(({ value, label }) => (
-              <div key={label} className="py-8 px-6 text-center">
-                <p className="font-cormorant text-4xl sm:text-5xl font-bold text-[#B8966A]">{value}</p>
-                <p className="text-[#9B8E7D] text-[11px] tracking-[0.18em] uppercase mt-2 font-medium">{label}</p>
+              { end: 15, suffix: "+", label: "Yıl Deneyim" },
+              { end: 5000, suffix: "+", label: "Mutlu Hasta" },
+              { prefix: "%", end: 98, label: "Memnuniyet" },
+              { textValue: "JCI", label: "Akreditasyonu" },
+            ].map((s, i) => (
+              <div key={i} style={{ borderRight: i < 3 ? `1px solid ${G.border}` : undefined }}>
+                <AnimatedStat {...s} />
               </div>
             ))}
           </div>
@@ -335,164 +395,119 @@ export default function LandingPage() {
       </section>
 
       {/* ══════════════════════════════════════
-          3. SERVICES CAROUSEL
+          3. SERVICES — carousel
       ══════════════════════════════════════ */}
-      <section className="py-24 sm:py-32 bg-[#2A261E]">
+      <section className="py-28 sm:py-36" style={{ background: G.deep }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-14">
+          <FadeIn className="mb-16">
             <Overline>Tedavilerimiz</Overline>
-            <h2 className="font-cormorant text-4xl sm:text-5xl font-light text-[#FAF7F2] leading-tight max-w-lg">
+            <h2 className="font-cormorant text-5xl sm:text-6xl font-light leading-tight max-w-xl" style={{ color: G.navy }}>
               Güzel bir gülüş için{" "}
-              <span className="italic">her şey burada</span>
+              <span className="italic font-medium" style={{ color: G.gold }}>her şey burada</span>
             </h2>
-          </div>
+            <p className="mt-4 text-sm max-w-sm" style={{ color: G.muted }}>
+              Kartların üzerine gelerek tedavilerimiz hakkında detaylı bilgi alın.
+            </p>
+          </FadeIn>
 
-          <div className="relative">
-            {/* Left arrow */}
-            <button
-              onClick={goPrev}
-              aria-label="Önceki"
-              className="absolute left-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-[#3D3830] flex items-center justify-center text-[#9B8E7D] hover:border-[#8B7355] hover:text-[#B8966A] transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-              </svg>
-            </button>
-
-            <div className="overflow-hidden mx-14">
-              <div
-                ref={trackRef}
-                className="flex gap-5"
-                style={{ transform: `translateX(-${slideOffset}px)` }}
-                onTransitionEnd={handleTransitionEnd}
-              >
-                {carouselCards.map(({ href, title, desc }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="group bg-[#1C1A15] border border-[#3D3830] p-7 hover:border-[#8B7355] transition-all duration-300 flex flex-col flex-shrink-0 w-full sm:w-[calc(50%-10px)] lg:w-[calc(25%-15px)]"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#8B7355] mb-6 group-hover:bg-[#B8966A] transition-colors" />
-                    <h3 className="font-cormorant text-xl font-medium text-[#FAF7F2] mb-3 leading-tight">{title}</h3>
-                    <p className="text-[#9B8E7D] text-sm leading-relaxed flex-1">{desc}</p>
-                    <div className="mt-6 flex items-center gap-1.5 text-[#8B7355] text-[11px] font-medium tracking-widest uppercase group-hover:text-[#B8966A] transition-colors">
-                      Detaylı Bilgi
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform duration-200" />
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-
-            {/* Right arrow */}
-            <button
-              onClick={goNext}
-              aria-label="Sonraki"
-              className="absolute right-0 top-1/2 -translate-y-1/2 z-10 w-10 h-10 border border-[#3D3830] flex items-center justify-center text-[#9B8E7D] hover:border-[#8B7355] hover:text-[#B8966A] transition-all duration-200"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
-          </div>
+          <FadeIn>
+            <TreatmentCarousel data={serviceCards} cardsPerView={3} />
+          </FadeIn>
         </div>
       </section>
 
       {/* ══════════════════════════════════════
           4. TRUST BADGES
       ══════════════════════════════════════ */}
-      <section className="py-14 bg-[#F2ECE0] border-y border-[#DDD0B8]">
+      <section className="py-16" style={{ background: G.surface, borderTop: `1px solid ${G.border}`, borderBottom: `1px solid ${G.border}` }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <StaggerGrid className="grid grid-cols-2 md:grid-cols-4 gap-5">
             {[
               { sym: "◈", title: "JCI Akreditasyonu", desc: "Uluslararası kalite standardı" },
               { sym: "◉", title: "Dijital Görüntüleme", desc: "3D tomografi ve smile design" },
               { sym: "◇", title: "Taksit İmkânı", desc: "12 aya kadar faizsiz" },
               { sym: "◆", title: "Esnek Randevu", desc: "Hafta sonu da hizmetinizdeyiz" },
             ].map(({ sym, title, desc }) => (
-              <div key={title} className="bg-[#FAF7F2] border border-[#DDD0B8] p-6 flex items-start gap-4">
-                <span className="text-xl text-[#8B7355] leading-none mt-0.5 shrink-0">{sym}</span>
+              <motion.div key={title} variants={staggerItem}
+                className="glass-card glass-card-hover p-7 flex items-start gap-4 transition-all duration-400">
+                <span className="text-xl leading-none mt-0.5 shrink-0" style={{ color: G.gold }}>{sym}</span>
                 <div>
-                  <h3 className="font-outfit font-semibold text-[#1C1A15] text-sm mb-1">{title}</h3>
-                  <p className="text-[#9B8E7D] text-xs leading-relaxed">{desc}</p>
+                  <h3 className="font-cormorant text-lg font-semibold mb-1" style={{ color: G.navy }}>{title}</h3>
+                  <p className="text-xs leading-relaxed" style={{ color: G.muted }}>{desc}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </StaggerGrid>
         </div>
       </section>
 
       {/* ══════════════════════════════════════
           5. CLINIC INTRO
       ══════════════════════════════════════ */}
-      <section className="py-24 sm:py-32 bg-[#FAF7F2]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <section className="py-28 sm:py-36 relative overflow-hidden" style={{ background: G.ink }}>
+        <div className="absolute right-0 top-0 w-[500px] h-[500px] rounded-full pointer-events-none"
+          style={{ background: `radial-gradient(circle, rgba(184,146,42,0.07) 0%, transparent 70%)` }} />
 
-            {/* Image with ornamental frame */}
-            <div className="relative">
-              {/* Offset decorative border */}
-              <div className="absolute inset-5 border border-[#B8966A]/20 pointer-events-none z-10" />
+        <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
 
-              <div className="aspect-[4/3] bg-gradient-to-br from-[#F2ECE0] to-[#EDE0C8] flex items-center justify-center relative overflow-hidden">
-                {/* Corner ornaments */}
-                <div className="absolute top-0 left-0 w-10 h-10 border-t border-l border-[#B8966A]/50" />
-                <div className="absolute top-0 right-0 w-10 h-10 border-t border-r border-[#B8966A]/50" />
-                <div className="absolute bottom-0 left-0 w-10 h-10 border-b border-l border-[#B8966A]/50" />
-                <div className="absolute bottom-0 right-0 w-10 h-10 border-b border-r border-[#B8966A]/50" />
-
+            <FadeIn from="left" className="relative">
+              {/* Corner gold brackets */}
+              <div className="absolute inset-6 pointer-events-none z-10">
+                {[["top-0 left-0 border-t border-l"], ["top-0 right-0 border-t border-r"], ["bottom-0 left-0 border-b border-l"], ["bottom-0 right-0 border-b border-r"]].map((cls, i) => (
+                  <div key={i} className={`absolute w-12 h-12 ${cls[0]}`} style={{ borderColor: `rgba(184,146,42,0.45)` }} />
+                ))}
+              </div>
+              <div className="aspect-[4/3] flex items-center justify-center relative overflow-hidden"
+                style={{ background: `linear-gradient(135deg, ${G.elevated} 0%, #D8CEC0 100%)` }}>
                 <div className="text-center">
-                  <svg className="w-14 h-14 mx-auto mb-3 text-[#B8966A]/40" fill="none" stroke="currentColor" strokeWidth={0.8} viewBox="0 0 24 24">
-                    <rect x="3" y="3" width="18" height="18" rx="0" />
-                    <circle cx="8.5" cy="8.5" r="1.5" />
-                    <polyline points="21 15 16 10 5 21" />
+                  <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" strokeWidth={0.7} viewBox="0 0 24 24" style={{ color: `rgba(184,146,42,0.35)` }}>
+                    <rect x="3" y="3" width="18" height="18" rx="0" /><circle cx="8.5" cy="8.5" r="1.5" /><polyline points="21 15 16 10 5 21" />
                   </svg>
-                  <p className="text-[11px] tracking-[0.2em] uppercase text-[#B8966A]/60">Klinik Fotoğrafı</p>
+                  <p className="text-[11px] tracking-[0.22em] uppercase font-medium" style={{ color: `rgba(184,146,42,0.5)` }}>Klinik Fotoğrafı</p>
                 </div>
               </div>
-
-              {/* Experience badge */}
-              <div className="absolute -bottom-6 -right-6 bg-[#1C1A15] px-7 py-5 shadow-2xl z-20">
-                <p className="font-cormorant text-5xl font-bold text-[#B8966A] leading-none">15+</p>
-                <p className="text-[10px] tracking-[0.18em] uppercase text-[#FAF7F2]/50 mt-1.5">Yıl Deneyim</p>
+              {/* Gold badge */}
+              <div className="absolute -bottom-6 -right-6 px-8 py-5 z-20 text-white"
+                style={{ background: G.navy, boxShadow: "0 12px 40px rgba(15,30,53,0.2)" }}>
+                <p className="font-cormorant text-5xl font-bold leading-none">15<span style={{ color: G.goldMid }}>+</span></p>
+                <p className="text-[10px] tracking-[0.2em] uppercase opacity-60 mt-1.5">Yıl Deneyim</p>
               </div>
-            </div>
+            </FadeIn>
 
-            {/* Text */}
-            <div>
+            <FadeIn from="right" delay={0.15}>
               <Overline>Kliniğimiz Hakkında</Overline>
-              <h2 className="font-cormorant text-4xl sm:text-5xl leading-tight mb-6">
-                <span className="font-light italic text-[#1C1A15]">Sağlığınız ve estetiğiniz için </span>
-                <span className="font-bold text-[#1C1A15]">en iyisini </span>
-                <span className="font-light italic text-[#8B7355]">sunuyoruz</span>
+              <h2 className="font-cormorant text-5xl sm:text-6xl leading-tight mb-8">
+                <span className="font-light italic" style={{ color: G.navy }}>Sağlığınız için </span>
+                <span className="font-bold italic" style={{ color: G.gold }}>en iyisini </span>
+                <span className="font-light" style={{ color: G.dimCream }}>sunuyoruz</span>
               </h2>
-              <p className="text-[#6B5F4E] leading-relaxed mb-8 text-[15px]">
+              <p className="leading-relaxed mb-10 text-[16px]" style={{ color: G.muted }}>
                 2009 yılından bu yana Kadıköy&apos;de hizmet veren kliniğimiz, alanında uzmanlaşmış hekim kadrosu ve son teknoloji ekipmanlarıyla binlerce hastanın hayatını güzel bir gülüşle değiştirdi.
               </p>
-
-              <ul className="space-y-3.5 mb-10">
+              <ul className="space-y-4 mb-12">
                 {[
                   "JCI akreditasyonlu, uluslararası standartlarda hizmet",
                   "Son teknoloji dijital görüntüleme ve tasarım sistemleri",
                   "Uzman ve deneyimli hekim kadrosu",
                   "Steril, konforlu ve sıcak tedavi ortamı",
                   "Tüm tedavilerde esnek taksit imkânı",
-                ].map((item) => (
-                  <li key={item} className="flex items-start gap-3 text-[#6B5F4E] text-sm">
-                    <span className="text-[#8B7355] mt-0.5 shrink-0 text-base leading-none">◈</span>
+                ].map(item => (
+                  <li key={item} className="flex items-start gap-3 text-sm" style={{ color: G.muted }}>
+                    <span className="mt-0.5 shrink-0" style={{ color: G.gold }}>◈</span>
                     {item}
                   </li>
                 ))}
               </ul>
-
-              <Link
-                href="/hakkimda"
-                className="group inline-flex items-center gap-3 bg-[#1C1A15] text-[#FAF7F2] font-medium px-8 py-4 text-sm tracking-wide hover:bg-[#2A261E] transition-colors duration-300"
-              >
+              <Link href="/hakkimda"
+                className="group inline-flex items-center gap-3 font-semibold px-9 py-4 text-sm tracking-wide transition-all duration-300 cursor-pointer text-white"
+                style={{ background: G.navy }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = G.gold; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = G.navy; }}>
                 Daha Fazla Bilgi
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
               </Link>
-            </div>
+            </FadeIn>
           </div>
         </div>
       </section>
@@ -500,306 +515,307 @@ export default function LandingPage() {
       {/* ══════════════════════════════════════
           6. PATIENT REVIEWS
       ══════════════════════════════════════ */}
-      <section className="py-24 sm:py-32 bg-[#1C1A15]">
+      <section className="py-28 sm:py-36" style={{ background: G.surface }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-14">
+          <FadeIn className="mb-16">
             <Overline>Hasta Yorumları</Overline>
-            <h2 className="font-cormorant text-4xl sm:text-5xl font-light text-[#FAF7F2]">
-              Hastalarımız <span className="italic">ne diyor?</span>
+            <h2 className="font-cormorant text-5xl sm:text-6xl font-light" style={{ color: G.navy }}>
+              Hastalarımız <span className="italic font-medium" style={{ color: G.gold }}>ne diyor?</span>
             </h2>
-          </div>
+          </FadeIn>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <StaggerGrid className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {reviews.map(({ name, date, treatment, text }) => (
-              <div key={name} className="bg-[#2A261E] border border-[#3D3830] p-8 flex flex-col relative">
-                <span className="font-cormorant text-8xl font-bold text-[#8B7355]/15 leading-none absolute top-3 right-5 select-none pointer-events-none">&ldquo;</span>
-                <div className="flex gap-1 mb-5">
-                  {Array.from({ length: 5 }).map((_, i) => <StarIcon key={i} />)}
-                </div>
-                <p className="text-[#9B8E7D] text-sm leading-relaxed flex-1 mb-6 relative z-10">
-                  &ldquo;{text}&rdquo;
-                </p>
-                <div className="border-t border-[#3D3830] pt-5 flex items-end justify-between">
+              <motion.div key={name} variants={staggerItem}
+                className="glass-card glass-card-hover p-9 flex flex-col relative transition-all duration-400">
+                {/* Decorative quote */}
+                <span className="font-cormorant text-[100px] font-bold leading-none absolute -top-2 right-6 select-none pointer-events-none"
+                  style={{ color: `rgba(184,146,42,0.07)` }}>&ldquo;</span>
+                <div className="flex gap-1 mb-6">{Array.from({ length: 5 }).map((_, i) => <StarIcon key={i} />)}</div>
+                <p className="text-sm leading-relaxed flex-1 mb-8 relative z-10" style={{ color: G.muted }}>&ldquo;{text}&rdquo;</p>
+                <div className="pt-6 flex items-end justify-between" style={{ borderTop: `1px solid rgba(184,146,42,0.1)` }}>
                   <div>
-                    <p className="font-cormorant text-lg font-medium text-[#FAF7F2] leading-tight">{name}</p>
-                    <p className="text-[#8B7355] text-[11px] tracking-widest uppercase mt-0.5">{treatment}</p>
+                    <p className="font-cormorant text-xl font-semibold leading-tight" style={{ color: G.navy }}>{name}</p>
+                    <p className="text-[10px] tracking-[0.2em] uppercase mt-0.5 font-medium" style={{ color: G.gold }}>{treatment}</p>
                   </div>
-                  <span className="text-[#6B5F4E] text-xs">{date}</span>
+                  <span className="text-xs" style={{ color: G.muted }}>{date}</span>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </StaggerGrid>
         </div>
       </section>
 
       {/* ══════════════════════════════════════
-          7. BEFORE / AFTER GALLERY
+          7. BEFORE / AFTER
       ══════════════════════════════════════ */}
-      <section className="py-24 sm:py-32 bg-[#FAF7F2]">
+      <section className="py-28 sm:py-36" style={{ background: G.deep }}>
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="mb-14 text-center">
+          <FadeIn className="mb-16 text-center">
             <Overline centered>Önce & Sonra</Overline>
-            <h2 className="font-cormorant text-4xl sm:text-5xl font-light text-[#1C1A15]">
-              Dönüşüm <span className="italic">galerimiz</span>
+            <h2 className="font-cormorant text-5xl sm:text-6xl font-light" style={{ color: G.navy }}>
+              Dönüşüm <span className="italic font-medium" style={{ color: G.gold }}>galerimiz</span>
             </h2>
-            <p className="text-[#6B5F4E] mt-3 text-sm max-w-sm mx-auto">
+            <p className="mt-4 text-sm max-w-sm mx-auto" style={{ color: G.muted }}>
               Gerçek hastalarımızın tedavi öncesi ve sonrasına ait görüntüler.
             </p>
-          </div>
+          </FadeIn>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-            {beforeAfterItems.map(({ label }) => (
-              <div key={label} className="overflow-hidden border border-[#DDD0B8]">
-                <div className="grid grid-cols-2 h-56 relative">
-                  {/* Divider */}
-                  <div className="absolute inset-y-0 left-1/2 -translate-x-px w-px bg-white z-10" />
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-7 h-7 bg-white border border-[#DDD0B8] z-20 flex items-center justify-center">
-                    <div className="w-3 h-px bg-[#B8966A]" />
-                    <div className="w-px h-3 bg-[#B8966A] absolute" />
+          <StaggerGrid className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+            {[{ label: "Dental İmplant" }, { label: "Gülüş Tasarımı" }, { label: "Zirkonyum Kron" }].map(({ label }) => (
+              <motion.div key={label} variants={staggerItem} className="overflow-hidden glass-card">
+                <div className="grid grid-cols-2 h-60 relative">
+                  <div className="absolute inset-y-0 left-1/2 -translate-x-px w-px z-10" style={{ background: `rgba(184,146,42,0.25)` }} />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 z-20 flex items-center justify-center"
+                    style={{ background: G.surface, border: `1px solid rgba(184,146,42,0.25)` }}>
+                    <div className="w-3.5 h-px" style={{ background: G.gold }} />
+                    <div className="w-px h-3.5 absolute" style={{ background: G.gold }} />
                   </div>
 
-                  {/* Before */}
-                  <div className="bg-[#F2ECE0] flex flex-col items-center justify-center gap-2">
-                    <span className="text-[9px] font-bold text-[#9B8E7D] uppercase tracking-[0.2em]">Önce</span>
-                    <div className="w-11 h-11 rounded-full bg-[#DDD0B8]/40 flex items-center justify-center">
-                      <svg className="w-5.5 h-5.5 text-[#9B8E7D] w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M8 15s1.5-1.5 4-1.5 4 1.5 4 1.5" />
-                        <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth={2.5} />
-                        <line x1="15" y1="9" x2="15.01" y2="9" strokeWidth={2.5} />
+                  <div className="flex flex-col items-center justify-center gap-3" style={{ background: G.ink }}>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: G.muted }}>Önce</span>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ background: `rgba(184,146,42,0.05)`, border: `1px solid rgba(184,146,42,0.15)` }}>
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" style={{ color: G.muted }}>
+                        <circle cx="12" cy="12" r="10" /><path d="M8 15s1.5-1.5 4-1.5 4 1.5 4 1.5" />
+                        <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth={2.5} /><line x1="15" y1="9" x2="15.01" y2="9" strokeWidth={2.5} />
                       </svg>
                     </div>
                   </div>
 
-                  {/* After */}
-                  <div className="bg-[#EDE0C8] flex flex-col items-center justify-center gap-2">
-                    <span className="text-[9px] font-bold text-[#8B7355] uppercase tracking-[0.2em]">Sonra</span>
-                    <div className="w-11 h-11 rounded-full bg-[#B8966A]/20 flex items-center justify-center">
-                      <svg className="w-6 h-6 text-[#8B7355]" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                        <circle cx="12" cy="12" r="10" />
-                        <path d="M8 13s1.5 2 4 2 4-2 4-2" />
-                        <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth={2.5} />
-                        <line x1="15" y1="9" x2="15.01" y2="9" strokeWidth={2.5} />
+                  <div className="flex flex-col items-center justify-center gap-3" style={{ background: G.elevated }}>
+                    <span className="text-[9px] font-bold uppercase tracking-[0.22em]" style={{ color: G.gold }}>Sonra</span>
+                    <div className="w-12 h-12 rounded-full flex items-center justify-center"
+                      style={{ background: `rgba(184,146,42,0.1)`, border: `1px solid rgba(184,146,42,0.28)` }}>
+                      <svg className="w-6 h-6" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24" style={{ color: G.gold }}>
+                        <circle cx="12" cy="12" r="10" /><path d="M8 13s1.5 2 4 2 4-2 4-2" />
+                        <line x1="9" y1="9" x2="9.01" y2="9" strokeWidth={2.5} /><line x1="15" y1="9" x2="15.01" y2="9" strokeWidth={2.5} />
                       </svg>
                     </div>
                   </div>
                 </div>
-
-                <div className="bg-white px-5 py-4 border-t border-[#DDD0B8]">
-                  <p className="font-cormorant text-base font-medium italic text-[#1C1A15]">{label}</p>
+                <div className="px-6 py-5" style={{ borderTop: `1px solid rgba(184,146,42,0.12)` }}>
+                  <p className="font-cormorant text-lg font-semibold italic" style={{ color: G.navy }}>{label}</p>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </StaggerGrid>
         </div>
       </section>
 
       {/* ══════════════════════════════════════
           8. 3-STEP PROCESS
       ══════════════════════════════════════ */}
-      <section className="py-24 sm:py-32 bg-[#2A261E] relative overflow-hidden">
-        {/* Ghost "3" in background */}
+      <section className="py-28 sm:py-36 relative overflow-hidden" style={{ background: G.navy }}>
+        {/* Large ghost numeral */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-          <span className="font-cormorant font-bold text-[#FAF7F2]/[0.015]" style={{ fontSize: "300px", lineHeight: 1 }}>3</span>
+          <span className="font-cormorant font-bold" style={{ fontSize: "320px", lineHeight: 1, color: `rgba(255,255,255,0.03)` }}>3</span>
         </div>
+        {/* Ambient glow */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full pointer-events-none"
+          style={{ background: `radial-gradient(circle, rgba(184,146,42,0.08) 0%, transparent 70%)` }} />
 
         <div className="relative max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <Overline centered>Nasıl Çalışır?</Overline>
-            <h2 className="font-cormorant text-4xl sm:text-5xl font-light text-[#FAF7F2]">
-              3 Adımda <span className="italic">Hayalinizdeki Gülüş</span>
+          <FadeIn className="text-center mb-20">
+            <Overline centered light>Nasıl Çalışır?</Overline>
+            <h2 className="font-cormorant text-5xl sm:text-6xl font-light text-white">
+              3 Adımda <span className="italic font-medium" style={{ color: G.goldMid }}>Hayalinizdeki Gülüş</span>
             </h2>
-          </div>
+          </FadeIn>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 md:gap-6 relative">
-            {/* Desktop connector */}
-            <div className="hidden md:block absolute top-[22px] left-[calc(16.67%+22px)] right-[calc(16.67%+22px)] h-px bg-[#3D3830]" />
-
+          <StaggerGrid className="grid grid-cols-1 md:grid-cols-3 gap-14 md:gap-8 relative" stagger={0.15}>
+            {/* Connector line */}
+            <div className="hidden md:block absolute top-[22px] left-[calc(16.67%+22px)] right-[calc(16.67%+22px)] h-px"
+              style={{ background: `rgba(184,146,42,0.2)` }} />
             {steps.map(({ num, title, desc }) => (
-              <div key={num} className="flex flex-col items-center text-center relative">
-                <div className="relative mb-8">
-                  {/* Ghost number */}
-                  <span className="font-cormorant text-[96px] font-bold text-[#8B7355]/10 leading-none absolute -top-5 left-1/2 -translate-x-1/2 select-none pointer-events-none">{num}</span>
-                  {/* Number box */}
-                  <div className="relative z-10 w-11 h-11 border border-[#8B7355]/50 flex items-center justify-center bg-[#2A261E]">
-                    <span className="font-cormorant text-lg font-medium text-[#B8966A]">{num}</span>
+              <motion.div key={num} variants={staggerItem} className="flex flex-col items-center text-center relative">
+                <div className="relative mb-10">
+                  <span className="font-cormorant font-bold leading-none absolute -top-5 left-1/2 -translate-x-1/2 select-none"
+                    style={{ fontSize: "100px", color: `rgba(184,146,42,0.08)` }}>{num}</span>
+                  <div className="relative z-10 w-12 h-12 flex items-center justify-center"
+                    style={{ border: `1px solid rgba(184,146,42,0.4)`, background: "rgba(184,146,42,0.08)" }}>
+                    <span className="font-cormorant text-xl font-medium" style={{ color: G.goldMid }}>{num}</span>
                   </div>
                 </div>
-                <h3 className="font-cormorant text-2xl font-medium text-[#FAF7F2] mb-3 leading-tight">{title}</h3>
-                <p className="text-[#9B8E7D] text-sm leading-relaxed max-w-xs">{desc}</p>
-              </div>
+                <h3 className="font-cormorant text-2xl font-medium mb-4 leading-snug text-white">{title}</h3>
+                <p className="text-sm leading-relaxed max-w-xs" style={{ color: "rgba(255,255,255,0.45)" }}>{desc}</p>
+              </motion.div>
             ))}
-          </div>
+          </StaggerGrid>
 
-          <div className="text-center mt-14">
-            <a
-              href={WA_LINK}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group inline-flex items-center gap-3 bg-[#FAF7F2] text-[#1C1A15] font-medium px-8 py-4 text-sm tracking-wide hover:bg-[#EDE0C8] transition-colors duration-300"
-            >
-              <span className="text-green-600"><WhatsAppIcon /></span>
+          <FadeIn className="text-center mt-16">
+            <a href={WA_LINK} target="_blank" rel="noopener noreferrer"
+              className="group inline-flex items-center gap-3 font-semibold px-10 py-4 text-sm tracking-wide transition-all duration-300 cursor-pointer text-white"
+              style={{ background: G.gold }}
+              onMouseEnter={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1.1)"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = "brightness(1)"; }}>
+              <WhatsAppIcon />
               Hemen Başlayın
               <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
             </a>
-          </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* ══════════════════════════════════════
           9. FAQ
       ══════════════════════════════════════ */}
-      <section className="py-24 sm:py-32 bg-[#FAF7F2]">
+      <section className="py-28 sm:py-36" style={{ background: G.surface }}>
         <div className="max-w-2xl mx-auto px-6">
-          <div className="text-center mb-14">
+          <FadeIn className="text-center mb-16">
             <Overline centered>Sık Sorulan Sorular</Overline>
-            <h2 className="font-cormorant text-4xl sm:text-5xl font-light text-[#1C1A15]">
-              Merak <span className="italic">ettikleriniz</span>
+            <h2 className="font-cormorant text-5xl sm:text-6xl font-light" style={{ color: G.navy }}>
+              Merak <span className="italic font-medium" style={{ color: G.gold }}>ettikleriniz</span>
             </h2>
-          </div>
+          </FadeIn>
 
-          <div className="divide-y divide-[#DDD0B8]">
-            {faqs.map(({ q, a }, i) => (
-              <div key={i} className={`transition-colors duration-200 ${openFaq === i ? "bg-[#F2ECE0]" : ""}`}>
-                <button
-                  onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                  className="w-full flex items-center justify-between px-5 py-5 text-left gap-6"
-                >
-                  <span className={`font-outfit font-medium text-sm sm:text-base transition-colors ${openFaq === i ? "text-[#1C1A15]" : "text-[#3D3830]"}`}>
-                    {q}
-                  </span>
-                  <span className={`shrink-0 transition-colors ${openFaq === i ? "text-[#8B7355]" : "text-[#9B8E7D]"}`}>
-                    <ChevronIcon open={openFaq === i} />
-                  </span>
-                </button>
-                {openFaq === i && (
-                  <div className="px-5 pb-6">
-                    <p className="text-[#6B5F4E] text-sm leading-relaxed">{a}</p>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+          <FadeIn>
+            <div style={{ borderTop: `1px solid ${G.border}` }}>
+              {faqs.map(({ q, a }, i) => (
+                <div key={i} style={{ borderBottom: `1px solid ${G.border}` }}>
+                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                    className="w-full flex items-center justify-between px-2 py-6 text-left gap-6 cursor-pointer transition-colors duration-200">
+                    <span className="font-outfit font-medium text-sm sm:text-base"
+                      style={{ color: openFaq === i ? G.navy : G.dimCream }}>{q}</span>
+                    <span className="shrink-0" style={{ color: openFaq === i ? G.gold : G.muted }}>
+                      <ChevronIcon open={openFaq === i} />
+                    </span>
+                  </button>
+                  <AnimatePresence initial={false}>
+                    {openFaq === i && (
+                      <motion.div key="a" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                        className="overflow-hidden">
+                        <div className="px-2 pb-7">
+                          <p className="text-sm leading-relaxed" style={{ color: G.muted }}>{a}</p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              ))}
+            </div>
+          </FadeIn>
         </div>
       </section>
 
       {/* ══════════════════════════════════════
-          10. CTA BANNER
+          10. CTA BANNER — warm gold section
       ══════════════════════════════════════ */}
-      <section className="bg-[#1C1A15] py-20 sm:py-24 relative overflow-hidden">
-        {/* Concentric ring decoration */}
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-          <div className="w-[700px] h-[700px] rounded-full border border-white/[0.018]" />
-          <div className="w-[500px] h-[500px] rounded-full border border-white/[0.025] absolute" />
-          <div className="w-[300px] h-[300px] rounded-full border border-white/[0.035] absolute" />
-        </div>
+      <section className="py-24 sm:py-32 relative overflow-hidden" style={{ background: G.deep, borderTop: `1px solid ${G.border}` }}>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full pointer-events-none animate-pulse-glow"
+          style={{ background: `radial-gradient(circle, rgba(184,146,42,0.1) 0%, transparent 65%)` }} />
 
-        <div className="relative max-w-2xl mx-auto px-6 text-center">
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <div className="h-px flex-1 max-w-[60px] bg-[#8B7355]/40" />
-            <span className="text-[#8B7355] text-[10px] tracking-[0.28em] uppercase font-medium">Randevu Al</span>
-            <div className="h-px flex-1 max-w-[60px] bg-[#8B7355]/40" />
+        <FadeIn className="relative max-w-3xl mx-auto px-6 text-center">
+          <div className="flex items-center justify-center gap-5 mb-10">
+            <div className="h-px flex-1 max-w-[80px]" style={{ background: `rgba(184,146,42,0.3)` }} />
+            <div className="w-2 h-2 rotate-45" style={{ background: G.gold }} />
+            <span className="text-[10px] tracking-[0.32em] uppercase font-medium" style={{ color: G.gold }}>Ücretsiz İlk Muayene</span>
+            <div className="w-2 h-2 rotate-45" style={{ background: G.gold }} />
+            <div className="h-px flex-1 max-w-[80px]" style={{ background: `rgba(184,146,42,0.3)` }} />
           </div>
 
-          <h2 className="font-cormorant leading-tight mb-4" style={{ fontSize: "clamp(36px,5vw,60px)" }}>
-            <span className="font-light italic text-[#FAF7F2]">Gülüşünüzü değiştirmeye</span>
-            <br />
-            <span className="font-bold text-[#B8966A]">hazır mısınız?</span>
+          <h2 className="font-cormorant leading-[0.9] mb-6" style={{ fontSize: "clamp(48px,6vw,80px)" }}>
+            <span className="block font-light italic" style={{ color: G.navy }}>Gülüşünüzü değiştirmeye</span>
+            <span className="block font-bold italic" style={{ color: G.gold }}>hazır mısınız?</span>
           </h2>
 
-          <p className="text-[#9B8E7D] text-sm leading-relaxed mb-10 max-w-md mx-auto">
+          <p className="text-[15px] leading-relaxed mb-12 max-w-md mx-auto" style={{ color: G.muted }}>
             İlk muayene tamamen ücretsiz. WhatsApp üzerinden randevu alın, uzman hekimimiz size en uygun tedavi planını hazırlasın.
           </p>
 
-          <a
-            href={WA_LINK}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="group inline-flex items-center gap-3 bg-green-600 hover:bg-green-700 text-white font-medium px-10 py-4 text-sm tracking-wide transition-colors duration-300"
-          >
-            <WhatsAppIcon />
+          <a href={WA_LINK} target="_blank" rel="noopener noreferrer"
+            className="group inline-flex items-center gap-3 font-semibold px-10 py-5 text-sm tracking-wide transition-all duration-300 cursor-pointer text-white"
+            style={{ background: "rgb(22,163,74)" }}
+            onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "rgb(21,128,61)"; }}
+            onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "rgb(22,163,74)"; }}>
+            <WhatsAppIcon size={20} />
             WhatsApp ile Randevu Al
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-200" />
           </a>
-        </div>
+        </FadeIn>
       </section>
 
       {/* ══════════════════════════════════════
-          11. FOOTER
+          11. FOOTER — deep navy
       ══════════════════════════════════════ */}
-      <footer className="bg-[#12100D] text-[#6B5F4E]">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-16">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
-
-            {/* Brand */}
+      <footer style={{ background: "#08111F" }}>
+        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-18 pt-16 pb-16">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
             <div>
-              <div className="flex items-center gap-3 mb-5">
-                <div className="w-9 h-9 border border-[#8B7355]/50 flex items-center justify-center shrink-0">
-                  <span className="font-cormorant text-sm font-bold text-[#B8966A]">DK</span>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 flex items-center justify-center shrink-0"
+                  style={{ border: `1px solid rgba(201,168,76,0.35)`, background: "rgba(201,168,76,0.07)" }}>
+                  <span className="font-cormorant text-sm font-bold" style={{ color: G.goldMid }}>DK</span>
                 </div>
                 <div>
-                  <p className="font-cormorant text-base font-medium text-[#FAF7F2] leading-tight">Diş Kliniği</p>
-                  <p className="text-[10px] tracking-[0.18em] uppercase text-[#8B7355]">Sağlıklı Gülüşler</p>
+                  <p className="font-cormorant text-base font-semibold leading-tight" style={{ color: "#F0EBE0" }}>Diş Kliniği</p>
+                  <p className="text-[10px] tracking-[0.2em] uppercase" style={{ color: G.goldMid }}>Sağlıklı Gülüşler</p>
                 </div>
               </div>
-              <p className="text-sm leading-relaxed">
+              <p className="text-sm leading-relaxed" style={{ color: "rgba(255,255,255,0.35)" }}>
                 Modern diş hekimliği ile güzel gülüşler için Kadıköy&apos;deyiz. 2009&apos;dan beri güvenilir hizmet.
               </p>
+              <div className="h-px mt-8" style={{ background: `rgba(201,168,76,0.15)` }} />
             </div>
 
-            {/* Treatments */}
-            <div>
-              <h4 className="font-outfit font-semibold text-[#FAF7F2] text-[11px] tracking-widest uppercase mb-5">Tedaviler</h4>
-              <ul className="space-y-2.5 text-sm">
-                {[
-                  { label: "Dental İmplant", href: "/tedaviler/implant" },
-                  { label: "Zirkonyum Kronlar", href: "/tedaviler/protetik" },
-                  { label: "Diş Beyazlatma", href: "/tedaviler/protetik" },
-                  { label: "Gülüş Tasarımı", href: "/tedaviler/gulus-tasarimi" },
-                  { label: "Dişeti Tedavisi", href: "/tedaviler/diseti-hastaliklari" },
-                ].map(({ label, href }) => (
-                  <li key={label}>
-                    <Link href={href} className="hover:text-[#B8966A] transition-colors duration-200">{label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
+            {[
+              { title: "Tedaviler", links: [
+                { label: "Dental İmplant", href: "/tedaviler/implant" },
+                { label: "Zirkonyum Kronlar", href: "/tedaviler/protetik" },
+                { label: "Diş Beyazlatma", href: "/tedaviler/protetik" },
+                { label: "Gülüş Tasarımı", href: "/tedaviler/gulus-tasarimi" },
+                { label: "Dişeti Tedavisi", href: "/tedaviler/diseti-hastaliklari" },
+              ]},
+              { title: "Sayfalar", links: [
+                { label: "Ana Sayfa", href: "/" },
+                { label: "Hakkımızda", href: "/hakkimda" },
+                { label: "Blog", href: "/blog" },
+                { label: "İletişim", href: "/iletisim" },
+                { label: "Randevu", href: "/randevu" },
+              ]},
+            ].map(({ title, links }) => (
+              <div key={title}>
+                <h4 className="font-outfit font-semibold text-[10px] tracking-[0.25em] uppercase mb-6"
+                  style={{ color: G.goldMid }}>{title}</h4>
+                <ul className="space-y-3 text-sm">
+                  {links.map(({ label, href }) => (
+                    <li key={label}>
+                      <Link href={href} className="transition-colors duration-200"
+                        style={{ color: "rgba(255,255,255,0.35)" }}
+                        onMouseEnter={e => (e.currentTarget.style.color = G.goldMid)}
+                        onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
+                        {label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
 
-            {/* Pages */}
             <div>
-              <h4 className="font-outfit font-semibold text-[#FAF7F2] text-[11px] tracking-widest uppercase mb-5">Sayfalar</h4>
-              <ul className="space-y-2.5 text-sm">
-                {[
-                  { label: "Ana Sayfa", href: "/" },
-                  { label: "Hakkımızda", href: "/hakkimda" },
-                  { label: "Blog", href: "/blog" },
-                  { label: "İletişim", href: "/iletisim" },
-                  { label: "Randevu", href: "/randevu" },
-                ].map(({ label, href }) => (
-                  <li key={label}>
-                    <Link href={href} className="hover:text-[#B8966A] transition-colors duration-200">{label}</Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Contact */}
-            <div>
-              <h4 className="font-outfit font-semibold text-[#FAF7F2] text-[11px] tracking-widest uppercase mb-5">İletişim</h4>
-              <ul className="space-y-3 text-sm">
+              <h4 className="font-outfit font-semibold text-[10px] tracking-[0.25em] uppercase mb-6"
+                style={{ color: G.goldMid }}>İletişim</h4>
+              <ul className="space-y-3 text-sm" style={{ color: "rgba(255,255,255,0.35)" }}>
                 <li>Atatürk Cad. No:12, Kadıköy, İstanbul</li>
                 <li>
-                  <a href="tel:+902121234567" className="hover:text-[#B8966A] transition-colors duration-200">
+                  <a href="tel:+902121234567" className="transition-colors duration-200"
+                    onMouseEnter={e => (e.currentTarget.style.color = G.goldMid)}
+                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
                     +90 212 123 45 67
                   </a>
                 </li>
                 <li>
-                  <a href="mailto:info@disklinigi.com" className="hover:text-[#B8966A] transition-colors duration-200">
+                  <a href="mailto:info@disklinigi.com" className="transition-colors duration-200"
+                    onMouseEnter={e => (e.currentTarget.style.color = G.goldMid)}
+                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
                     info@disklinigi.com
                   </a>
                 </li>
                 <li>
-                  <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="hover:text-green-500 transition-colors duration-200">
+                  <a href={WA_LINK} target="_blank" rel="noopener noreferrer" className="transition-colors duration-200"
+                    onMouseEnter={e => (e.currentTarget.style.color = "#4ADE80")}
+                    onMouseLeave={e => (e.currentTarget.style.color = "rgba(255,255,255,0.35)")}>
                     WhatsApp Randevu
                   </a>
                 </li>
@@ -808,14 +824,14 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="border-t border-[#1C1A15]">
-          <div className="max-w-7xl mx-auto px-6 lg:px-8 py-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-[#3D3830]">
+        <div style={{ borderTop: `1px solid rgba(201,168,76,0.07)` }}>
+          <div className="max-w-7xl mx-auto px-6 lg:px-8 py-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs"
+            style={{ color: `rgba(255,255,255,0.2)` }}>
             <p>© 2025 Diş Kliniği. Tüm hakları saklıdır.</p>
             <p>Kadıköy, İstanbul · Türkiye</p>
           </div>
         </div>
       </footer>
-
     </div>
   );
 }
