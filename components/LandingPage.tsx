@@ -5,11 +5,11 @@ import Link from "next/link";
 import {
   motion,
   useInView,
-  AnimatePresence,
   useMotionValue,
   animate as motionAnimate,
 } from "framer-motion";
 import TreatmentCarousel from "@/components/ui/carousel-card-1";
+import { DentalFaqsSection } from "@/components/ui/faqs-1";
 
 // ─── Design tokens ───────────────────────────────────────────────────────────
 
@@ -55,17 +55,7 @@ function StarIcon() {
   );
 }
 
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      className="w-4 h-4 transition-transform duration-300"
-      style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-      fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"
-    >
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
+
 
 // ─── Animation helpers ────────────────────────────────────────────────────────
 
@@ -212,22 +202,11 @@ const steps = [
   { num: "03", title: "Hayalinizdeki Gülüşe Kavuşun", desc: "Modern ekipmanlar ve uzman el birliğiyle en kısa sürede mükemmel sonuca ulaşın." },
 ];
 
-const faqs = [
-  { q: "İmplant tedavisi ağrılı mıdır?", a: "Hayır. İmplant tedavisi lokal anestezi altında gerçekleştirildiği için işlem sırasında hiçbir ağrı hissetmezsiniz. İşlem sonrası hafif bir hassasiyet olabilir, bu da birkaç gün içinde tamamen geçer." },
-  { q: "Diş beyazlatma ne kadar sürer ve sonuçlar kalıcı mıdır?", a: "Kliniğimizde profesyonel beyazlatma genellikle tek seansta (yaklaşık 60–90 dakika) tamamlanır. Düzenli bakım ve doğru beslenme alışkanlıklarıyla sonuçlar 1–2 yıl veya daha uzun süre kalıcı olabilir." },
-  { q: "Zirkonyum kronlar ne kadar dayanıklıdır?", a: "İyi bakım koşullarında zirkonyum kronlar 15–20 yıl veya daha uzun süre kullanılabilir. Metal içermedikleri için hem daha sağlıklı hem de estetik bir seçenektir." },
-  { q: "Gülüş tasarımı kimlere uygulanabilir?", a: "18 yaş ve üzeri, genel ağız sağlığı iyi olan herkese uygulanabilir. İlk muayenede hekimimiz sizi değerlendirerek en uygun tedavi planını hazırlar." },
-  { q: "Taksit imkânı var mıdır?", a: "Evet, tüm tedavilerimizde 12 aya kadar faizsiz taksit imkânı sunulmaktadır. Detaylı ödeme seçenekleri için kliniğimizle iletişime geçebilirsiniz." },
-  { q: "İlk muayene ücretli midir?", a: "Hayır, ilk muayene ve tedavi planlaması tamamen ücretsizdir. WhatsApp üzerinden randevu oluşturmanız yeterlidir." },
-];
-
 const WA_LINK = "https://wa.me/902121234567?text=Merhaba%2C%20randevu%20almak%20istiyorum.";
 
 // ─── Component ───────────────────────────────────────────────────────────────
 
 export default function LandingPage() {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-
   const heroContainer = { hidden: {}, visible: { transition: { staggerChildren: 0.09, delayChildren: 0.15 } } };
   const heroItem = { hidden: { opacity: 0, y: 32 }, visible: { opacity: 1, y: 0, transition: { duration: 0.9, ease } } };
 
@@ -670,31 +649,7 @@ export default function LandingPage() {
           </FadeIn>
 
           <FadeIn>
-            <div style={{ borderTop: `1px solid ${G.border}` }}>
-              {faqs.map(({ q, a }, i) => (
-                <div key={i} style={{ borderBottom: `1px solid ${G.border}` }}>
-                  <button onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between px-2 py-6 text-left gap-6 cursor-pointer transition-colors duration-200">
-                    <span className="font-outfit font-medium text-sm sm:text-base"
-                      style={{ color: openFaq === i ? G.navy : G.dimCream }}>{q}</span>
-                    <span className="shrink-0" style={{ color: openFaq === i ? G.gold : G.muted }}>
-                      <ChevronIcon open={openFaq === i} />
-                    </span>
-                  </button>
-                  <AnimatePresence initial={false}>
-                    {openFaq === i && (
-                      <motion.div key="a" initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.32, ease: [0.16, 1, 0.3, 1] }}
-                        className="overflow-hidden">
-                        <div className="px-2 pb-7">
-                          <p className="text-sm leading-relaxed" style={{ color: G.muted }}>{a}</p>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-              ))}
-            </div>
+            <DentalFaqsSection />
           </FadeIn>
         </div>
       </section>
